@@ -12,7 +12,7 @@ def inline_arg(args):
     ------
     list: `[{args_dict1}, {args_dict2}]`
     """
-
+    assert (args[0:2] == '--'), "Usage: '--func' or '--func(condition, output)'"
     match = re.finditer(
         r'--(?P<func>\w+)(?:\((?P<condition>.*),(?P<output>.*)\))?', args)
     return [n.groupdict() for n in match]
