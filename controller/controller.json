@@ -1,0 +1,16 @@
+{
+  "service": {
+    "workers": 5,
+    "options": []
+  },
+  "flowMap": {
+    "path": "resources/core",
+    "fileName": "runflow.xlsx",
+    "sheetName": ""
+  },
+  "caseMap": {
+    "path": "resources/input",
+    "fileName": "home.xlsx",
+    "sheetName": "Sheet1"
+  }
+}
