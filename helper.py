@@ -12,8 +12,9 @@ def inline_arg(args):
     ------
     list: `[{args_dict1}, {args_dict2}]`
     """
-    condition1 = (args != '') & (args[0:2] == '--')
-    condition2 = args == ''
+    # acceptance criteria
+    condition1 = (args != '') & (args[0:2] == '--') #correct syntax arhs
+    condition2 = args == '' #empty imput
     assert (condition1 | condition2), "Usage: '--func' or '--func(condition, output)' "
     match = re.finditer(
         r'--(?P<func>\w+)(?:\((?P<condition>.*),(?P<output>.*)\))?', args)
