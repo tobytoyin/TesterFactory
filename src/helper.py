@@ -7,6 +7,7 @@ def inline_arg(args):
     Arguments:
     ------
     `args` (string): '--func(condition, output)' or '--func' or combined
+
     Output:
     ------
     list: `[{args_dict1}, {args_dict2}]`
