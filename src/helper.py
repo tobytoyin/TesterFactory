@@ -1,7 +1,7 @@
 import re
 
 
-def inline_arg(args):
+def inline_arg_compile(args):
     """
     Using regex to load inline arguments.
     Arguments:
@@ -14,7 +14,7 @@ def inline_arg(args):
     """
     # acceptance criteria
     condition1 = (args != '') & (args[0:2] == '--')  # correct syntax arhs
-    condition2 = args == ''  # empty imput
+    condition2 = args in ['', 'nan']  # empty imput
     assert (condition1 | condition2), "Usage: '--func' or '--func(condition, output)' "
     match = re.finditer(
         r'--(?P<func>\w+)(?:\((?P<condition>.*),(?P<output>.*)\))?', args)

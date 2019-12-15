@@ -1,9 +1,13 @@
+
 import pandas as pd
 import json
 
 
 class Factory:
     def __init__(self, path='C:/USers/tobyt/TestFactory/controller/controller.json'):
+        """
+        Factory is used to setup and load all needed data from spreadsheets
+        """
         self.setup = json.load(open(path, 'r'))
 
     def book_and_sheets(self, book_key=''):
@@ -27,20 +31,16 @@ class Factory:
         return wb, sh, tg
 
     @property
-    def flows_map(self):
+    def flow_maps(self):
         wb, sh, _ = self.book_and_sheets(book_key='flowMap')
-        flows_map = {}
+        flow_maps = {}
 
         for sheet in sh:
-            flows_map[sheet] = pd.read_excel(wb, sheet, dtype=object)
-        return flows_map
+            flow_maps[sheet] = pd.read_excel(wb, sheet)
+        return flow_maps
 
     @property
-    def testcases(self):
+    def test_inputs(self):
         wb, _, tg = self.book_and_sheets(book_key='caseMap')
-        testcases = pd.read_excel(wb, tg, dtype=object).dropna(how='all')
-        return testcases
-
-
-f = Factory()
-print(f.testcases)
+        test_inputs = pd.read_excel(wb, tg, dtype=str).dropna(how='all')
+        return test_inputs
