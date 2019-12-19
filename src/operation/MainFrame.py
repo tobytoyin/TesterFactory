@@ -80,7 +80,7 @@ class MainFrame:
         # print(arg)
         if (element_exist == None) & (arg['condition'] == 'No'):
             self.process.pointer_change(
-                switch_method='jumpto', value=arg['output'])
+                switch_method='jumpto', value=arg['input'])
             print(f"pointer change to {self.process.i}")
 
         elif (element_exist != None) & (arg['condition'] == 'Yes'):

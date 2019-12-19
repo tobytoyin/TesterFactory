@@ -16,7 +16,7 @@ class DataInterface:
             'run_path': '',
             'run_method': '',
             'run_logic': '',
-            'run_logic_list': '',
+            'run_logic_fetch': '',
             'run_key': '',
             'run_value': '',
             'validate_method': '',

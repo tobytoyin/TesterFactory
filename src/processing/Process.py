@@ -58,8 +58,8 @@ class Process:
                 validate_method=row['validate_method'], validate_value=validate_value)
 
             # compile inline-logic, add into DataInterface as list()
-            logic_list = inline_arg_compile(str(row['logic']))
-            data_interface.data_any_load(run_logic_list=logic_list)
+            logic_dict = inline_arg_compile(str(row['logic']))
+            data_interface.data_any_load(run_logic_fetch=logic_dict)
 
             self.i += 1
             return data_interface

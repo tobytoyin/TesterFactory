@@ -1,10 +1,13 @@
+from src.processing.Process import test_data
+import src.operation.execute_imports  # load all library modules
+from src.helper import inline_arg_compile
+import time
+# driver = webdriver.Chrome()
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementClickInterceptedException, ElementNotInteractableException
+from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
-from src.processing.Process import test_data
-from src.helper import inline_arg_compile
-# driver = webdriver.Chrome()
 
 
 class Execution:
@@ -24,6 +27,7 @@ class Execution:
     def __init__(self, driver, data_interface):
         self.driver = driver
         self.driver.implicitly_wait(10)
+        self.wait = WebDriverWait(self.driver, 10)
         self._data_interface = data_interface
         self.blueprint_data = self._data_interface.get_blueprint_data
         self.tc = self.blueprint_data['run_tc']
@@ -47,6 +51,7 @@ class Execution:
             return None
         func = getattr(self, self.blueprint_data[key])
         func()
+
         # add element into cache
         if self.element_exist is None:
             self._data_interface.cache_add(element_exist=0)
@@ -137,9 +142,11 @@ class TestExecution(Execution):
         else:
             self.element_exist = buttons[index]
 
+    ### Logic behind performing actions. Generalized different cases with similar behaviours ###
     def _button_clicker(self):
         """Handle clicking button, e.g. real/ shadow button"""
         element = self.element_exist
+        driver = self.driver
 
         try:
             assert element is not None
@@ -147,31 +154,63 @@ class TestExecution(Execution):
         # handle shadow button
         except ElementClickInterceptedException:
             js_command = 'arguements[0].click();'
-            self.driver.execute_script(js_command, element)
+            driver.execute_script(js_command, element)
         except ElementNotInteractableException:
             element.submit()
         except AssertionError:
             print("----> test: Button does not exist")
 
-    ### Actions Block ###
-    def click_button(self):
-        """method = click_button"""
-        self._single_element()
-        if self.element_exist:
-            self._button_clicker()
-            self._data_interface.check_proceed()
+    def _input_writer(self):
+        """Inject run_value into input fields"""
+        # initiate
+        input_value = self.blueprint_data['run_value']
+        element = self.element_exist
+        driver = self.driver
 
-    def goto_url(self):
-        "webdriver goto a destinated url"
-        url = self.blueprint_data['run_value']
-        assert url[0:4] == 'http'
-        self.driver.get(url)
-        print(f"{self.tc} travelling to: '{url}'")
+        # don't type anything if value is 'nan'
+        if input_value == 'nan':
+            input_value = ''
+
+        # inject value by trying different methods
+        try:
+            element.send_keys(input_value)
+        # input fields is likely to be a span fields rather than input box
+        except ElementNotInteractableException:
+            js_command = f'arguments[0].innerText = {input_value};'
+            driver.execute_script(js_command, element)
+
+    ### Actions Block ###
+    def click_alert(self):
+        """
+        Click something on the ALERT BOX (default=accept)
+        inline-log:
+        ------
+        `--accept` -- accept ALERT BOX
+        `--reject` -- reject ALERT BOX
+        """
+        self.wait.until(EC.alert_is_present())
+        logic_fetch = self.blueprint_data['run_logic_fetch']
+
+        alert_box = self.driver.switch_to.alert_box
+
+        # default is accept
+        if not logic_fetch:
+            alert_box.accept()
+            time.sleep(1)  # ?
+            return None
+
+        # by inline values
+        if 'accept' in logic_fetch.keys():
+            alert_box.accept()
+        elif 'reject' in logic_fetch.keys():
+            alert_box.reject()
+        time.sleep(1)  # ?
+        return None
 
     def checkout(self):
         """Check out whether a web-element should exist or not"""
-        locator, path = self._locators()
-        checkout_list = self.driver.find_elements(locator, path)
+        locator, path, driver = self._locators()
+        checkout_list = driver.find_elements(locator, path)
         print(f"---> checkout: {path}")
         if len(checkout_list) != 0:
             self.element_exist = checkout_list
@@ -180,8 +219,29 @@ class TestExecution(Execution):
             self._data_interface.cache_add(element_exist=None)
 
     def click_button(self):
+        """method = click_button"""
         self._single_element()
-        print("Testing---> success")
+        if self.element_exist:
+            self._button_clicker()
+            self._data_interface.check_proceed()
+
+    def date_picker(self):
+        """Pick update from DATEPICKER using date format"""
+        self._single_element()
+        element = self.element_exist
+
+    def goto_url(self):
+        "webdriver goto a destinated url"
+        url = self.blueprint_data['run_value']
+        assert url[0:4] == 'http'
+        self.driver.get(url)
+        print(f"{self.tc} travelling to: '{url}'")
+
+    def wait(self):
+        """Force webdriver to wait for n-seconds"""
+        logic_fetch = self.blueprint_data['run_logic_fetch']
+        sec = 5 if not logic_fetch else logic_fetch['input']
+        time.sleep(sec)
 
 
 class ValidateExecution(Execution):
