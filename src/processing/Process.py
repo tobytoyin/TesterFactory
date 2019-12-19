@@ -1,13 +1,14 @@
 from selenium import webdriver
 from src.processing.DataInterface import DataInterface
 from src.Factory import Factory
+from src.helper import inline_arg_compile
 
 
 class Process:
     def __init__(self, driver, test_input, flow_map):
         # , driver, data_interface,
         """
-        Core processing for a running a test case
+        Core processing for fetching data 
 
         Parameters:
         ------
@@ -32,13 +33,9 @@ class Process:
     def __next__(self):
         """
         Move the pointer
-        Arguments:
-        -----
-        `pointer` -- `forward`: i move forward by 1, `moveto`: i move to specific i, `skip`: i skip the next nth points.
-
        Outputs:
        ------
-       `data_interface`: A data cache for operation as well as report storage. 
+       `data_interface`: A data cache for operation as well as report storage.
        """
         # pointer move in a step of flow_map
         i = self.i
@@ -54,10 +51,16 @@ class Process:
                 row['validate_key']) == 'nan' else self.test_input[row['validate_key']]
 
             # update data into DataInterface of current pointing row
-            data_interface.data_load(run_tc=self.tc,
-                                     run_locator=row['locator'], run_path=row['path'], run_method=row['method'],
-                                     run_logic=row['logic'], run_key=row['key'], run_value=value,
-                                     validate_method=row['validate_method'], validate_value=validate_value)
+            data_interface.data_str_load(
+                run_tc=self.tc,
+                run_locator=row['locator'], run_path=row['path'], run_method=row['method'],
+                run_logic=row['logic'], run_key=row['key'], run_value=value,
+                validate_method=row['validate_method'], validate_value=validate_value)
+
+            # compile inline-logic, add into DataInterface as list()
+            logic_list = inline_arg_compile(str(row['logic']))
+            data_interface.data_any_load(run_logic_list=logic_list)
+
             self.i += 1
             return data_interface
         else:

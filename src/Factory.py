@@ -1,4 +1,3 @@
-
 import pandas as pd
 import json
 
@@ -36,7 +35,7 @@ class Factory:
         flow_maps = {}
 
         for sheet in sh:
-            flow_maps[sheet] = pd.read_excel(wb, sheet)
+            flow_maps[sheet] = pd.read_excel(wb, sheet, index_col='index')
         return flow_maps
 
     @property

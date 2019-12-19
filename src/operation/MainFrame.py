@@ -6,7 +6,7 @@ from datetime import datetime
 
 class MainFrame:
     """
-    MainFrame is used to take a single data needed from Process and start the testing process. 
+    MainFrame is used to take a single data needed from Process and start the testing process.
     Handle logical operation of the whole framework. 
     The output will then query another data needed and continue. 
     Argument:
@@ -27,48 +27,50 @@ class MainFrame:
         "Start to execute a test case"
         ### initiate variables ###
         process = self.process
-        run = True  # determine to terminate/ continue
+        run = 0  # determine to terminate/ continue
         process_iter = iter(process)
+        process_max = process_iter.n
         t_start = datetime.now()
 
         ### process running ###
         print("process is starting --->")
-        while run:
+        while run < process_max:
             assert process.web_status == 200
             # geterator a cache for passing data
             data_interface = next(process_iter)
+            print(data_interface.get_blueprint_data)
 
             # Block for TestExecution
-            test_exe = TestExecution(process.driver, data_interface)
-            test_exe.execute_func(execute_for='run')
+            # test_exe = TestExecution(process.driver, data_interface)
+            # test_exe.execute_func(execute_for='run')
             print("Test cache passing --->")
             print(data_interface.get_cache)
 
             # Block for ValidateExecution
-            valid_exe = ValidateExecution(process.driver, data_interface)
-            valid_exe.execute_func(execute_for='validate')
+            # valid_exe = ValidateExecution(process.driver, data_interface)
+            # valid_exe.execute_func(execute_for='validate')
             print("Test validate cache passing --->")
             print(data_interface.get_cache)
 
             # Block for manipulating iterator pointer
-            self._inline_logic_read(
-                test_exe, data_interface.get_blueprint_data['run_logic'])
+            # self._inline_logic_read(
+            #     test_exe, data_interface.get_blueprint_data['run_logic'])
+            run += 1
 
-        ### process terminated ###
+            ### process terminated ###
         print(data_interface.get_testing_reports)
 
-    def _inline_logic_read(self, test_exe, logic_syntax):
+    def _inline_logic_read(self, test_exe, logic_list):
         """
         Read inline logic, e.g. --jumpto(Yes,3)
         Arguments: 
         ------
-        `logic_syntax` (list of dict): list containing dictionaries with keys `['func', 'condition', 'output']`
+        `logic_list` (list of dict): list containing dictionaries with keys `['func', 'condition', 'output']`
         """
-        logic_args = inline_arg_compile(logic_syntax)
         # no inline-args to work on
-        if len(logic_args) == 0:
+        if len(logic_list) == 0:
             return None
-        for arg in logic_args:  # loop each dict
+        for arg in logic_list:  # loop each dict
             if arg['func'] == 'jumpto':
                 self._jumpto_logic(test_exe, arg)
 

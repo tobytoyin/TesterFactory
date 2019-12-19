@@ -1,11 +1,11 @@
 class DataInterface:
     def __init__(self):
         """
-        `DataInterface` is a cache for storing data for this application. 
+        `DataInterface` is a cache for storing data for this application.
         Usage:
         ------
-        `next(process)` generates a `DataInterface` object inside the `MainFrame`. 
-        Data required to 1 test step is then passed to `Execution` object to retreive data for selenium usage. 
+        `next(process)` generates a `DataInterface` object inside the `MainFrame`.
+        Data required to 1 test step is then passed to `Execution` object to retreive data for selenium usage.
         Testing feedbacks are then passback to `DataInterface` and return to `MainFrame`.
         Finally `MainFrame` concatenate all caches and summarized into a report.
         """
@@ -16,6 +16,7 @@ class DataInterface:
             'run_path': '',
             'run_method': '',
             'run_logic': '',
+            'run_logic_list': '',
             'run_key': '',
             'run_value': '',
             'validate_method': '',
@@ -50,9 +51,9 @@ class DataInterface:
     def get_cache(self):
         return self._cache
 
-    def data_load(self, **kwargs):
+    def data_str_load(self, **kwargs):
         """
-        Add data to `DataInterface`.
+        Add string-like data to `DataInterface`.
         Example:
         ------
         `data_load(key1=value1, key2=value2, ...)` loads value into `DataInterface._blueprint_data`
@@ -60,13 +61,25 @@ class DataInterface:
         """
         for key, value in kwargs.items():
             assert (key in self._blueprint_data.keys()
-                    ), "Key not in blueprint, use data_add() to add new key"
+                    ), "Key not in blueprint, use data_add_key() to add new key"
             self._blueprint_data[key] = str(value)
         return self.get_blueprint_data
 
-    def data_add(self, **kwargs):
+    def data_any_load(self, **kwargs):
+        """
+        Add any-like data to `DataInterface`.
+        """
         for key, value in kwargs.items():
+            assert (key in self._blueprint_data.keys()
+                    ), "Key not in blueprint, use data_add_key() to add new key"
             self._blueprint_data[key] = value
+        return self.get_blueprint_data
+
+    def data_add_key(self, **args):
+        """Add keys to `DataInterface`"""
+        for new_key in args.items():
+            assert (new_key not in self._blueprint_data.keys()), "Repeated Key"
+            self._blueprint_data[new_key] = ''
         return self.get_blueprint_data
 
     def check_proceed(self, test_case=''):
