@@ -1,6 +1,6 @@
 from src.processing.Process import test_data
-import src.operation.execute_imports  # load all library modules
 from src.helper import inline_arg_compile
+from src.util_driver import full_screenshot
 import time
 # driver = webdriver.Chrome()
 from selenium.webdriver.support.ui import WebDriverWait
@@ -143,6 +143,16 @@ class TestExecution(Execution):
             self.element_exist = buttons[index]
 
     ### Logic behind performing actions. Generalized different cases with similar behaviours ###
+    # def _button_dec(self, func):
+    #     """Handle clicking button, e.g. real/ shadow button"""
+    #     def wrapper():
+    #         self._single_element()
+    #         if self.element_exist:
+    #             func()
+    #             self._data_interface.check_proceed()
+
+    #     return wrapper
+
     def _button_clicker(self):
         """Handle clicking button, e.g. real/ shadow button"""
         element = self.element_exist
@@ -214,9 +224,6 @@ class TestExecution(Execution):
         print(f"---> checkout: {path}")
         if len(checkout_list) != 0:
             self.element_exist = checkout_list
-            self._data_interface.cache_add(element_exist=checkout_list)
-        else:
-            self._data_interface.cache_add(element_exist=None)
 
     def click_button(self):
         """method = click_button"""
@@ -225,10 +232,71 @@ class TestExecution(Execution):
             self._button_clicker()
             self._data_interface.check_proceed()
 
+    def click_checkbox(self):
+        """Click a CHECKBOX"""
+        self._group_elements()
+        if self.element_exist:
+            self._button_clicker()
+            time.sleep(0.5)
+
+    def click_radio(self):
+        """Click a RADIO button"""
+        self._group_elements()
+        element = self.element_exist
+
+        if element:
+            self._button_clicker()
+
+    def click_named_button(self):
+        """Click a BUTTON WITH NAME"""
+        self._text_elements()
+        if self.element_exist:
+            self._button_clicker()
+
     def date_picker(self):
         """Pick update from DATEPICKER using date format"""
         self._single_element()
         element = self.element_exist
+
+        if self.element_exist():
+            locator, path, driver = self._locators()
+            value = self.blueprint_data['run_value']
+            js_template = 'document.{method}("{path}").value = "{value}";'.format(
+                path=path, value=value)
+
+            # js get id
+            if locator == 'id':
+                js_command = js_template.format(method='getElementById')
+            # css query
+            elif locator == 'css':
+                js_command = js_template.format(method='querySelector')
+            # execute command
+            driver.execute_script(js_command, element)
+
+    def screencap(self, file_name):
+        """Take a full screenshot"""
+        if file_name == '':
+            file_name = self.blueprint_data['run_value']
+        img_where = '/'
+        time.sleep(0.5)
+        img_name = f'{img_where}{self.tc}_{file_name}.png'
+        self._data_interface.log_input(
+            test_case=self.tc, output=f'IMAGE:{img_name}')
+
+    def input(self):
+        """Input value into INPUT FIELDS"""
+        self._single_element()
+        if self.element_exist:
+            self._input_writer()
+
+    def goto_frame(self):
+        """Goto a iFRAME"""
+        locator, path, driver = self._locator()
+
+        time.sleep(1)
+        self.wait.until(EC.frame_to_be_available_and_switch_to_it)
+        driver.switch_to.default_content()
+        driver.switch_to.frame(path)
 
     def goto_url(self):
         "webdriver goto a destinated url"
@@ -236,6 +304,15 @@ class TestExecution(Execution):
         assert url[0:4] == 'http'
         self.driver.get(url)
         print(f"{self.tc} travelling to: '{url}'")
+
+    def unload_file(self):
+        """upload a file to UPLOAD"""
+        from os import getcwd
+        self._single_element()
+        file_location = getcwd() + '\\resources\\input\\' + \
+            self.blueprint_data['run_value']
+        element = self.element_exist
+        element.send_keys(file_location)
 
     def wait(self):
         """Force webdriver to wait for n-seconds"""
@@ -246,7 +323,7 @@ class TestExecution(Execution):
 
 class ValidateExecution(Execution):
     """
-    Sub-class of `Execution()` for validating testing outputs
+    Child-class of `Execution()` for validating testing outputs
     """
 
     def __init__(self, driver, data_interface):
@@ -254,33 +331,53 @@ class ValidateExecution(Execution):
         self.cache = data_interface.get_cache
         self.blueprint_data = data_interface.get_blueprint_data
         self.terminate = True
+        self.result = 'Fail'
 
     @property
     def validate_value(self):
         return self.blueprint_data['validate_value']
 
-    def checkout_exist(self):
-        """validate whether a `checkout` element should be exist or not"""
+    def checkout_validate(self):
+        """
+        validate whether a `checkout` element should be exist or not;
+
+        Sheet-value:
+        -----
+        Yes -- The element should exist;
+        No  -- The element should not exist;
+
+        Output:
+        ------
+        Pass -- Element exist & check-for Yes; or Element not exist & check-for No;
+        Fail -- Element exist & check-for No; or Element not exist & check-for Yes;
+        """
+
         element_exist = self.cache['element_exist']
         validate_key = self.blueprint_data['validate_key']
         validate_value = self.blueprint_data['validate_value']
-        tp = (validate_value == 'Yes') & (
-            element_exist is not None)  # true positive
-        tn = (validate_value == 'No') & (
-            element_exist is not None)  # true negative
+        tp = (validate_value == 'Yes') & (element_exist != 0)  # true positive
+        tn = (validate_value == 'No') & (element_exist == 0)  # true negative
+
+        ### Debugging value ###
+        print(f"Element exist: {element_exist}")
+        print(f"Validate value: {validate_value}")
 
         ### validation ###
         if tp | tn:
             self.terminate = False
+            self.result = 'Pass'
         else:
             pass
 
         self._data_interface.log_input(
             test_case=self.tc,
             expect=f"{validate_key} exists={validate_value}",
-            result=f"{validate_key} exists ?? TODO MSG"
-        )
+            actual=f"{validate_key} exists ?? TODO MSG",
+            result=self.result)
 
-    # # testing
-    # test_exe = TestExecution(test_data['driver'], test_data['data_interface'])
-    # test_exe.checkout()
+    # def checkout_disable(self):
+    #     """val
+
+    # # # testing
+    # # test_exe = TestExecution(test_data['driver'], test_data['data_interface'])
+    # # test_exe.checkout()

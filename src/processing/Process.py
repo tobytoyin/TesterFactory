@@ -84,7 +84,7 @@ class Process:
 
 
 f = Factory()
-a = f.flow_maps['v2']
+a = f.flow_maps['test_checkout']
 t = f.test_inputs
 driver = webdriver.Chrome('resources/webdrivers/chromedriver.exe')
 p = Process(driver, t.loc[0], a)

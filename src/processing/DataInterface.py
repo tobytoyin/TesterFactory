@@ -28,6 +28,7 @@ class DataInterface:
         self._log_data = {
             'tc': '',
             'expect': '',
+            'actual': '',
             'result': '',
             'error_msg': '',
             'output': ''
@@ -98,6 +99,7 @@ class DataInterface:
         msg_prefix = {
             'error_msg': "ERROR={}",
             'expect': "EXPECTED={}",
+            'actual': "ACTUAL={}",
             'result': "RESULT={}"
         }
         for key, value in kwargs.items():

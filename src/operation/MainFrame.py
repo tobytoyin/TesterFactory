@@ -35,30 +35,37 @@ class MainFrame:
         ### process running ###
         print("process is starting --->")
         while run < process_max:
+            print(f"{run} \n")
             assert process.web_status == 200
             # geterator a cache for passing data
             data_interface = next(process_iter)
-            print(data_interface.get_blueprint_data)
+            # print(data_interface.get_blueprint_data)
 
             # Block for TestExecution
-            # test_exe = TestExecution(process.driver, data_interface)
-            # test_exe.execute_func(execute_for='run')
-            print("Test cache passing --->")
-            print(data_interface.get_cache)
+            test_exe = TestExecution(process.driver, data_interface)
+            test_exe.execute_func(execute_for='run')
+
+            # Debugging msg
+            # print("Test cache passing --->")
+            # print(data_interface.get_cache)
 
             # Block for ValidateExecution
-            # valid_exe = ValidateExecution(process.driver, data_interface)
-            # valid_exe.execute_func(execute_for='validate')
-            print("Test validate cache passing --->")
-            print(data_interface.get_cache)
+            valid_exe = ValidateExecution(process.driver, data_interface)
+            valid_exe.execute_func(execute_for='validate')
+
+            # Debugging msg
+            # print("Test validate cache passing --->")
+            # print(data_interface.get_cache)
+            print(data_interface.get_log_data)
 
             # Block for manipulating iterator pointer
             # self._inline_logic_read(
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
+            del data_interface
             run += 1
 
             ### process terminated ###
-        print(data_interface.get_testing_reports)
+        # print(data_interface.get_testing_reports)
 
     def _inline_logic_read(self, test_exe, logic_list):
         """

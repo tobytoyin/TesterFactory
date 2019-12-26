@@ -2,3 +2,5 @@ pandas
 asyncio
 xlrd
 selenium
+pillow
+bs4
