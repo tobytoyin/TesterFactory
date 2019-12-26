@@ -15,16 +15,18 @@ def inline_arg_compile(args):
     # initiate
     output = {}
 
-    # acceptance criteria
+    # acceptance inputs criteria
     condition1 = (args != '') & (args[0:2] == '--')  # correct syntax args
-    condition2 = args in ['', 'nan']  # empty imput
+    condition2 = args in ['', 'nan']  # empty input
 
     assert (condition1 | condition2), "Usage: '--func' or '--func(condition, input)' "
-    match = re.finditer(
-        r'--(?P<func>\w+)(?:\((?P<condition>.*),(?P<input>.*)\))?', args)
+    ### Syntax to compile ###
+    syntax = r'--(?P<func>\w+)(\((?P<condition>\w*)(,(?P<input>\w*))?\))?'
+
+    match = re.finditer(syntax, args)
     match_list = [n.groupdict() for n in match]
 
-    # form dictionary
+    ### Reshape list to dict ###
     for item in match_list:
         func_name = item['func']
         output[func_name] = {
@@ -33,3 +35,8 @@ def inline_arg_compile(args):
         }
 
     return output
+
+
+# print(inline_arg_compile('--match'))
+# print(inline_arg_compile('--match(5,hi)'))
+# print(inline_arg_compile('--match(1)'))

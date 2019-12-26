@@ -10,7 +10,7 @@ class DataInterface:
         Finally `MainFrame` concatenate all caches and summarized into a report.
         """
         ### Data structure for running a single test process ###
-        self._blueprint_data = {
+        self._blueprint_cache = {
             'run_tc': '',
             'run_locator': '',
             'run_path': '',
@@ -20,6 +20,8 @@ class DataInterface:
             'run_key': '',
             'run_value': '',
             'validate_method': '',
+            'validate_logic': '',
+            'validate_logic_fetch': '',
             'validate_key': '',
             'validate_value': ''
         }
@@ -41,8 +43,8 @@ class DataInterface:
         self._proceed = False
 
     @property
-    def get_blueprint_data(self):
-        return self._blueprint_data
+    def get_blueprint_cache(self):
+        return self._blueprint_cache
 
     @property
     def get_log_data(self):
@@ -57,31 +59,31 @@ class DataInterface:
         Add string-like data to `DataInterface`.
         Example:
         ------
-        `data_load(key1=value1, key2=value2, ...)` loads value into `DataInterface._blueprint_data`
-        Only works when key exist in `DataInterface._blueprint_data`
+        `data_load(key1=value1, key2=value2, ...)` loads value into `DataInterface._blueprint_cache`
+        Only works when key exist in `DataInterface._blueprint_cache`
         """
         for key, value in kwargs.items():
-            assert (key in self._blueprint_data.keys()
+            assert (key in self._blueprint_cache.keys()
                     ), "Key not in blueprint, use data_add_key() to add new key"
-            self._blueprint_data[key] = str(value)
-        return self.get_blueprint_data
+            self._blueprint_cache[key] = str(value)
+        return self.get_blueprint_cache
 
     def data_any_load(self, **kwargs):
         """
         Add any-like data to `DataInterface`.
         """
         for key, value in kwargs.items():
-            assert (key in self._blueprint_data.keys()
+            assert (key in self._blueprint_cache.keys()
                     ), "Key not in blueprint, use data_add_key() to add new key"
-            self._blueprint_data[key] = value
-        return self.get_blueprint_data
+            self._blueprint_cache[key] = value
+        return self.get_blueprint_cache
 
     def data_add_key(self, **args):
         """Add keys to `DataInterface`"""
         for new_key in args.items():
-            assert (new_key not in self._blueprint_data.keys()), "Repeated Key"
-            self._blueprint_data[new_key] = ''
-        return self.get_blueprint_data
+            assert (new_key not in self._blueprint_cache.keys()), "Repeated Key"
+            self._blueprint_cache[new_key] = ''
+        return self.get_blueprint_cache
 
     def check_proceed(self, test_case=''):
         "A test case can proceed to next step"

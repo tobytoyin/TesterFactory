@@ -27,29 +27,29 @@ class Execution:
     def __init__(self, driver, data_interface):
         self.driver = driver
         self.driver.implicitly_wait(10)
-        self.wait = WebDriverWait(self.driver, 10)
+        self.driver_wait = WebDriverWait(self.driver, 10)
         self._data_interface = data_interface
-        self.blueprint_data = self._data_interface.get_blueprint_data
-        self.tc = self.blueprint_data['run_tc']
+        self.blueprint_cache = self._data_interface.get_blueprint_cache
+        self.tc = self.blueprint_cache['run_tc']
         self.element_exist = None  # determine whether a web-element exist or not
-        self.logics = inline_arg_compile(self.blueprint_data['run_logic'])
+        self.logics = inline_arg_compile(self.blueprint_cache['run_logic'])
 
-    @property
-    def _logics(self, inline_logic):
-        output = []
-        logics = inline_arg_compile(inline_logic)
-        for logic in logics:
-            output.append(logic[''])
-        # TODO last activity
+    # @property
+    # def _logics(self, inline_logic):
+    #     output = []
+    #     logics = inline_arg_compile(inline_logic)
+    #     for logic in logics:
+    #         output.append(logic[''])
+    #     # TODO last activity
 
     def execute_func(self, execute_for='run'):
         """Execute function through string fetching"""
         assert execute_for in ['run', 'validate'], \
             "Usage: execute_for in ['run', 'validate']"
         key = f'{execute_for}_method'
-        if str(self.blueprint_data[key]) == 'nan':
+        if str(self.blueprint_cache[key]) == 'nan':
             return None
-        func = getattr(self, self.blueprint_data[key])
+        func = getattr(self, self.blueprint_cache[key])
         func()
 
         # add element into cache
@@ -66,16 +66,36 @@ class TestExecution(Execution):
 
     def __init__(self, driver, data_interface):
         super().__init__(driver, data_interface)
+        # the logic to be triggered
+        self.run_logic_list = list(self.run_args.keys())
+
+    @property
+    def run_args(self):
+        """Retrieve inline args and input for running"""
+        return self.blueprint_cache['run_logic_fetch']
 
     ### Preparation Functions ###
+    def _logic_setup(self, default=''):
+        """Setup for the inline-logic: setup default value if not logic"""
+        assert default != '', "args--default requires a value"
+        if not self.run_logic_list:
+            return default
+        else:
+            # by args value
+            return self.run_logic_list[0]
+
+    def _logic_value(self, logic_name=''):
+        """Retreive the dict of a specific logic"""
+        return self.run_args[logic_name]
+
     def _locators(self):
         """Fix name for selenium and provide a path for that locator
         Outputs:
         ------
         `(locator, path)` --
         """
-        path = self.blueprint_data['run_path']
-        locator = self.blueprint_data['run_locator'].lower()
+        path = self.blueprint_cache['run_path']
+        locator = self.blueprint_cache['run_locator'].lower()
         if locator in ['class', 'tag']:
             return f'{locator} name', path, self.driver
         elif locator == 'css':
@@ -95,7 +115,7 @@ class TestExecution(Execution):
     def _group_elements(self):
         """Use to locate GROUPED web elements by INDEX"""
         locator, path, driver = self._locators()
-        value = self.blueprint_data['run_value'].lower()
+        value = self.blueprint_cache['run_value'].lower()
         choice = 0  # if entry don't have choice, assume to select first element
 
         if value == 'false':
@@ -117,7 +137,7 @@ class TestExecution(Execution):
     def _text_elements(self):
         """Locate GROUPED web elements by STRING"""
         locator, path, driver = self._locators()
-        value = self.blueprint_data['run_value']
+        value = self.blueprint_cache['run_value']
 
         # locate buttons
         buttons = driver.find_elements(locator, path)
@@ -131,7 +151,15 @@ class TestExecution(Execution):
         # stop loading when text is found
         match = False
         for index, button in enumerate(buttons):
+
+            ### debugging ###
+            print(f"Button{index} Name: {button.text}")
+
             if button.text == value:
+
+                ### debugging ###
+                print(f"====>{button.text} == {value}")
+
                 match = True
                 break
 
@@ -173,7 +201,7 @@ class TestExecution(Execution):
     def _input_writer(self):
         """Inject run_value into input fields"""
         # initiate
-        input_value = self.blueprint_data['run_value']
+        input_value = self.blueprint_cache['run_value']
         element = self.element_exist
         driver = self.driver
 
@@ -198,8 +226,8 @@ class TestExecution(Execution):
         `--accept` -- accept ALERT BOX
         `--reject` -- reject ALERT BOX
         """
-        self.wait.until(EC.alert_is_present())
-        logic_fetch = self.blueprint_data['run_logic_fetch']
+        self.driver_wait.until(EC.alert_is_present())
+        logic_fetch = self.blueprint_cache['run_logic_fetch']
 
         alert_box = self.driver.switch_to.alert_box
 
@@ -260,7 +288,7 @@ class TestExecution(Execution):
 
         if self.element_exist():
             locator, path, driver = self._locators()
-            value = self.blueprint_data['run_value']
+            value = self.blueprint_cache['run_value']
             js_template = 'document.{method}("{path}").value = "{value}";'.format(
                 path=path, value=value)
 
@@ -276,7 +304,7 @@ class TestExecution(Execution):
     def screencap(self, file_name):
         """Take a full screenshot"""
         if file_name == '':
-            file_name = self.blueprint_data['run_value']
+            file_name = self.blueprint_cache['run_value']
         img_where = '/'
         time.sleep(0.5)
         img_name = f'{img_where}{self.tc}_{file_name}.png'
@@ -289,35 +317,65 @@ class TestExecution(Execution):
         if self.element_exist:
             self._input_writer()
 
-    def goto_frame(self):
-        """Goto a iFRAME"""
-        locator, path, driver = self._locator()
+    # def goto_frame(self):
+    #     """Goto a iFRAME"""
+    #     locator, path, driver = self._locator()
 
-        time.sleep(1)
-        self.wait.until(EC.frame_to_be_available_and_switch_to_it)
-        driver.switch_to.default_content()
-        driver.switch_to.frame(path)
+    #     time.sleep(1)
+    #     self.wait.until(EC.frame_to_be_available_and_switch_to_it)
+    #     driver.switch_to.default_content()
+    #     driver.switch_to.frame(path)
 
-    def goto_url(self):
-        "webdriver goto a destinated url"
-        url = self.blueprint_data['run_value']
-        assert url[0:4] == 'http'
-        self.driver.get(url)
-        print(f"{self.tc} travelling to: '{url}'")
+    def goto(self):
+        "webdriver goto a specific object"
+        ### initiate ###
+        goto = self._logic_setup(default='url')
+        locator, path, driver = self._locators()
+
+        ### GOTO URL ###
+        if goto == 'url':
+            url = self.blueprint_cache['run_value']
+            assert url[0:4] == 'http', "'url' should start with 'http' or 'https'"
+            driver.get(url)
+            print(f"> {self.tc} travelling to: '{url}'")
+
+        ### GOTO iFRAME ###
+        elif goto == 'iframe':
+            assert path != '', "'--iframe' requires a 'path'"
+
+            time.sleep(1)
+            self.driver_wait.until(EC.frame_to_be_available_and_switch_to_it)
+            driver.switch_to.default_content()
+            driver.switch_to.frame(path)
+
+        ### GOTO BACK ###
+        elif goto == 'back':
+            print("> Returning to last page...")
+            driver.back()
+
+        ### Unknown args ###
+        else:
+            self._data_interface.log_input(
+                test_case=self.tc, error_msg=f"UNKNOWN ARGS: {goto}")
 
     def unload_file(self):
         """upload a file to UPLOAD"""
         from os import getcwd
         self._single_element()
         file_location = getcwd() + '\\resources\\input\\' + \
-            self.blueprint_data['run_value']
+            self.blueprint_cache['run_value']
         element = self.element_exist
         element.send_keys(file_location)
 
     def wait(self):
         """Force webdriver to wait for n-seconds"""
-        logic_fetch = self.blueprint_data['run_logic_fetch']
-        sec = 5 if not logic_fetch else logic_fetch['input']
+        ### initiate ###
+        val = self._logic_setup(default='default')
+
+        if val == 'default':
+            sec = 5
+        elif val == 'for':
+            sec = int(self._logic_value(logic_name='for')['condition'])
         time.sleep(sec)
 
 
@@ -329,32 +387,40 @@ class ValidateExecution(Execution):
     def __init__(self, driver, data_interface):
         super().__init__(driver, data_interface)
         self.cache = data_interface.get_cache
-        self.blueprint_data = data_interface.get_blueprint_data
+        self.blueprint_cache = data_interface.get_blueprint_cache
+        # the validate logic to be triggered
+        self.validate_logic_list = list(self.validate_args.keys())
         self.terminate = True
         self.result = 'Fail'
 
     @property
     def validate_value(self):
-        return self.blueprint_data['validate_value']
+        """Retrieve the value to validate for"""
+        return self.blueprint_cache['validate_value']
+
+    @property
+    def validate_args(self):
+        """Retrieve inline args and inputs for validation"""
+        return self.blueprint_cache['validate_logic_fetch']
 
     def checkout_validate(self):
         """
-        validate whether a `checkout` element should be exist or not;
+        validate whether a `checkout` element should be exist or not \n
 
         Sheet-value:
         -----
-        Yes -- The element should exist;
-        No  -- The element should not exist;
+        Yes -- The element should exist \n
+        No  -- The element should not exist \n
 
         Output:
         ------
-        Pass -- Element exist & check-for Yes; or Element not exist & check-for No;
-        Fail -- Element exist & check-for No; or Element not exist & check-for Yes;
+        Pass -- Element exist & check-for Yes; or Element not exist & check-for No \n
+        Fail -- Element exist & check-for No; or Element not exist & check-for Yes \n
         """
 
         element_exist = self.cache['element_exist']
-        validate_key = self.blueprint_data['validate_key']
-        validate_value = self.blueprint_data['validate_value']
+        validate_key = self.blueprint_cache['validate_key']
+        validate_value = self.blueprint_cache['validate_value']
         tp = (validate_value == 'Yes') & (element_exist != 0)  # true positive
         tn = (validate_value == 'No') & (element_exist == 0)  # true negative
 
@@ -374,6 +440,28 @@ class ValidateExecution(Execution):
             expect=f"{validate_key} exists={validate_value}",
             actual=f"{validate_key} exists ?? TODO MSG",
             result=self.result)
+
+    def redirect_validate(self):
+        """
+        Validate whether the browser redirect to an expected url \n
+        Check for exact URL match by default \n
+
+        Sheet-value:
+        -----
+        (string) -- The url to validate for \n
+
+        inline-logic:
+        -----
+        `--contain` -- Validate for URL containing the (string) rather than exact match \n
+
+        Output:
+        ------
+        Pass -- Element redirect to destinated URL/ destinated URL with (string) \n
+        Fail -- Element not redirect to destinated URL/ destinated URL not having (string) \n
+        """
+        ### initiate ###
+        current_url = self.driver.current_url
+        redirect_to = self.validate_value
 
     # def checkout_disable(self):
     #     """val
