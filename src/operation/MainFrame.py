@@ -39,7 +39,7 @@ class MainFrame:
             assert process.web_status == 200
             # geterator a cache for passing data
             data_interface = next(process_iter)
-            print(data_interface.get_blueprint_cache)
+            # print(data_interface.get_blueprint_cache)
 
             # Block for TestExecution
             test_exe = TestExecution(process.driver, data_interface)

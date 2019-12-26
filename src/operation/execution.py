@@ -2,6 +2,7 @@ from src.processing.Process import test_data
 from src.helper import inline_arg_compile
 from src.util_driver import full_screenshot
 import time
+import re
 # driver = webdriver.Chrome()
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
@@ -42,6 +43,32 @@ class Execution:
     #         output.append(logic[''])
     #     # TODO last activity
 
+    def _logic_setup(self, default=''):
+        """Setup for the inline-logic: setup default value if not logic"""
+        assert default != '', "args--default requires a value"
+
+        # from child TestExecution
+        if self.__class__ is TestExecution:
+            logic_list = self.run_logic_list
+        # from child ValidateExecution
+        elif self.__class__ is ValidateExecution:
+            logic_list = self.validate_logic_list
+
+        if not logic_list:
+            return default
+        else:
+            # by args value
+            return logic_list[0]
+
+    def _logic_value(self, logic_name=''):
+        """Retreive the dict of a specific logic"""
+        # from child TestExecution
+        if self.__class__ is TestExecution:
+            return self.run_args[logic_name]
+        # from child ValidateExecution
+        elif self.__class__ is ValidateExecution:
+            return self.validate_args[logic_name]
+
     def execute_func(self, execute_for='run'):
         """Execute function through string fetching"""
         assert execute_for in ['run', 'validate'], \
@@ -75,18 +102,6 @@ class TestExecution(Execution):
         return self.blueprint_cache['run_logic_fetch']
 
     ### Preparation Functions ###
-    def _logic_setup(self, default=''):
-        """Setup for the inline-logic: setup default value if not logic"""
-        assert default != '', "args--default requires a value"
-        if not self.run_logic_list:
-            return default
-        else:
-            # by args value
-            return self.run_logic_list[0]
-
-    def _logic_value(self, logic_name=''):
-        """Retreive the dict of a specific logic"""
-        return self.run_args[logic_name]
 
     def _locators(self):
         """Fix name for selenium and provide a path for that locator
@@ -403,6 +418,10 @@ class ValidateExecution(Execution):
         """Retrieve inline args and inputs for validation"""
         return self.blueprint_cache['validate_logic_fetch']
 
+    def _logic_value(self, logic_name=''):
+        """Retreive the dict of a specific logic"""
+        return self.validate_logic_list[logic_name]
+
     def checkout_validate(self):
         """
         validate whether a `checkout` element should be exist or not \n
@@ -462,6 +481,31 @@ class ValidateExecution(Execution):
         ### initiate ###
         current_url = self.driver.current_url
         redirect_to = self.validate_value
+
+        # validate not needed
+        if redirect_to == 'nan':
+            self.terminate = False
+            print("> test not needed")
+            return None
+
+        how = self._logic_setup(default='strict')
+        if how == 'contain':
+            tp = re.search(redirect_to, current_url)
+        elif how == 'strict':
+            tp = redirect_to == current_url
+
+        if tp:
+            self.terminate = False
+            self.result = 'Pass'
+        else:
+            pass
+
+        ### Log result ###
+        self._data_interface.log_input(
+            test_case=self.tc,
+            expect=f"Redirect ({how}) to '{redirect_to}'",
+            actual=f"Redirect ({how}) to '{current_url}'",
+            result=self.result)
 
     # def checkout_disable(self):
     #     """val
