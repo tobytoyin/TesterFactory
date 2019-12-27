@@ -33,6 +33,7 @@ class Execution:
         self._data_interface = data_interface
         self.blueprint_cache = self._data_interface.get_blueprint_cache
         self.tc = self.blueprint_cache['run_tc']
+        self.map_index = self.blueprint_cache['run_index']
         self.element_exist = None  # determine whether a web-element exist or not
         self.logics = inline_arg_compile(self.blueprint_cache['run_logic'])
 
@@ -47,11 +48,10 @@ class Execution:
         elif self.__class__ is ValidateExecution:
             logic_list = self.validate_logic_list
 
+        # if the logic list is empty, add the default value in list.
         if not logic_list:
-            return default
-        else:
-            # by args value
-            return logic_list[0]
+            logic_list.append(default)
+        return logic_list
 
     def _logic_attr(self, logic_name='', attr='all'):
         """
@@ -77,8 +77,8 @@ class Execution:
 
     def execute_func(self, execute_for='run'):
         """Execute function through string fetching"""
-        assert execute_for in ['run', 'validate'], \
-            "Usage: execute_for in ['run', 'validate']"
+        assert execute_for in ['run', 'validate'], "Usage: execute_for in ['run', 'validate']"
+        # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
         if str(self.blueprint_cache[key]) == 'nan':
             return None
@@ -90,6 +90,11 @@ class Execution:
             self._data_interface.cache_add(element_exist=0)
         else:
             self._data_interface.cache_add(element_exist=self.element_exist)
+
+        ### add identification to log_cache ###
+        # tc -- id for test case data
+        # map_index -- id for execution logic row
+        self._data_interface.log_input(tc=self.tc, map_index=self.map_index)
 
 
 class TestExecution(Execution):
@@ -130,7 +135,7 @@ class TestExecution(Execution):
         try:
             self.element_exist = self.driver.find_element(locator, path)
         except NoSuchElementException:
-            print('no such element')
+            print('> LOCATOR: NO SUCH ELEMENT.')
 
     def _group_elements(self):
         """Use to locate GROUPED web elements by INDEX"""
@@ -148,11 +153,9 @@ class TestExecution(Execution):
         except IndexError:
             # checkbox is to not click
             if choice != 1:
-                self._data_interface.log_input(
-                    tc=self.tc, error_msg='web element out of reach')
+                self._data_interface.log_input(error_msg='web element out of reach')
         except NoSuchElementException:
-            self._data_interface.log_input(
-                tc=self.tc, error_msg='web element does not exist')
+            self._data_interface.log_input(error_msg='web element does not exist')
 
     def _text_elements(self):
         """Locate GROUPED web elements by STRING"""
@@ -164,8 +167,7 @@ class TestExecution(Execution):
 
         # element not found
         if len(buttons) == 0:
-            self._data_interface.log_input(
-                tc=self.tc, error_msg='web element does not exist')
+            self._data_interface.log_input(error_msg='web element does not exist')
 
         # check button text
         # stop loading when text is found
@@ -185,8 +187,7 @@ class TestExecution(Execution):
 
         # text not found
         if not match:
-            self._data_interface.log_input(
-                tc=self.tc, error_msg=f'No BUTTONS cointain {value}')
+            self._data_interface.log_input(error_msg=f'No BUTTONS cointain {value}')
         else:
             self.element_exist = buttons[index]
 
@@ -328,8 +329,7 @@ class TestExecution(Execution):
         img_where = '/'
         time.sleep(0.5)
         img_name = f'{img_where}{self.tc}_{file_name}.png'
-        self._data_interface.log_input(
-            tc=self.tc, output=f'IMAGE:{img_name}')
+        self._data_interface.log_input(output=f'IMAGE:{img_name}')
 
     def input(self):
         """Input value into INPUT FIELDS"""
@@ -358,9 +358,9 @@ class TestExecution(Execution):
         text = ''
 
         ### define variable naming ###
-        if have_name == 'name':
+        if 'name' in have_name:
             # retreive and set variable naming
-            naming = self._logic_attr(logic_name=have_name, attr='condition')
+            naming = self._logic_attr(logic_name='name', attr='condition')
         msg = f"{'<' + naming + '>' if naming != '' else ''}"
 
         if self.element_exist:
@@ -372,7 +372,6 @@ class TestExecution(Execution):
             if len(comp) > 3:
                 # Incorrect syntax (too many components)
                 self._data_interface.log_input(
-                    tc=self.tc,
                     error_msg=f"UNKNOWN EXPRESSION: %inner_tag OR %inner_tag%attr%attr_val OR empty")
                 print(f"> ERROR: {args} is an unknown syntax")
                 return None 
@@ -402,15 +401,10 @@ class TestExecution(Execution):
             # web-element does not exist
             print("> Element does not exist...")
             pass
-            
-        self._data_interface.log_input(
-            tc=self.tc, output=f"TEXT{msg}:{text}")
 
-
-            
-
-        
-
+        output = f"TEXT{msg}:{text}"
+        self._data_interface.log_input(output=output)
+        self._data_interface.cache_add(text=output)  # add to cache for validation if needed
 
     def goto(self):
         "webdriver goto a specific object"
@@ -419,14 +413,14 @@ class TestExecution(Execution):
         locator, path, driver = self._locators()
 
         ### GOTO URL ###
-        if goto == 'url':
+        if 'url' in goto:
             url = self.blueprint_cache['run_value']
             assert url[0:4] == 'http', "'url' should start with 'http' or 'https'"
             driver.get(url)
             print(f"> {self.tc} travelling to: '{url}'")
 
         ### GOTO iFRAME ###
-        elif goto == 'iframe':
+        elif 'iframe' in goto:
             assert path != '', "'--iframe' requires a 'path'"
 
             time.sleep(1)
@@ -435,14 +429,13 @@ class TestExecution(Execution):
             driver.switch_to.frame(path)
 
         ### GOTO BACK ###
-        elif goto == 'back':
+        elif 'back' in goto:
             print("> Returning to last page...")
             driver.back()
 
         ### Unknown args ###
         else:
-            self._data_interface.log_input(
-                tc=self.tc, error_msg=f"UNKNOWN ARGS: {goto}")
+            self._data_interface.log_input(error_msg=f"UNKNOWN ARGS: {goto}")
 
     def unload_file(self):
         """upload a file to UPLOAD"""
@@ -458,9 +451,9 @@ class TestExecution(Execution):
         ### initiate ###
         val = self._logic_setup(default='default')
 
-        if val == 'default':
+        if 'default' in val:
             sec = 5
-        elif val == 'for':
+        elif 'for' in val:
             sec = int(self._logic_value(logic_name='for')['condition'])
         time.sleep(sec)
 
@@ -495,6 +488,34 @@ class ValidateExecution(Execution):
         self.result = 'Pass'
         return None
 
+    def _text_compare(self):
+        """
+        Compare text match with the one scrapped
+        """
+        ### initiate ###
+        compare_with = self.validate_value
+        cached = self._data_interface.get_cache['text']
+        how = self._logic_setup(default='strict')
+
+        ### Load info from cache-text ###
+        load_regex = r'TEXT(?:\<(\w*)\>)?:(.*)'
+        naming, scrapped_text = re.search(load_regex, cached).groups()
+        # join '|' as whitespace
+        scrapped_text = " ".join(scrapped_text.split('|'))
+
+        ### TEXT Comparison ###
+        # text = 'nan' skip checking
+        if compare_with == 'nan':
+            match = None
+        # --loose compare
+        elif 'loose' in how:
+            match = re.search(rf"({compare_with})", scrapped_text)
+        # strict compare
+        else:
+            match = re.search(rf"^\s?({compare_with})\s?$", scrapped_text)
+
+        return match, naming, scrapped_text, compare_with
+
     ### Set of functions for validation ###
     def checkout_validate(self):
         """
@@ -528,7 +549,6 @@ class ValidateExecution(Execution):
             pass
 
         self._data_interface.log_input(
-            tc=self.tc,
             expect=f"{validate_key} exists={validate_value}",
             actual=f"{validate_key} exists ?? TODO MSG",
             result=self.result)
@@ -563,9 +583,9 @@ class ValidateExecution(Execution):
             return None
 
         how = self._logic_setup(default='strict')
-        if how == 'contain':
+        if 'contain' in how:
             tp = re.search(redirect_to, current_url)
-        elif how == 'strict':
+        elif 'strict' in how:
             tp = redirect_to == current_url
 
         if tp:
@@ -575,10 +595,46 @@ class ValidateExecution(Execution):
 
         ### Log result ###
         self._data_interface.log_input(
-            tc=self.tc,
             expect=f"Redirect ({how}) to '{redirect_to}'",
             actual=f"Redirect ({how}) to '{current_url}'",
             result=self.result)
+
+    def text_validate(self):
+        """
+        Verify whether a text exist/ not exist
+        args:
+        -----
+        `--without` -- Text should NOT match \n
+        `--loose` -- Match by occurrence instead of exact match.
+        """
+        match, naming, scrapped_text, compare_with = self._text_compare()
+        how = self._logic_setup(default='with')
+        placeholder = ''
+        actual_placeholder = ''
+
+        ### verification ###
+        tp = not bool(match) if 'without' in how else bool(match)
+
+        # Pass - Text not exist and expect not to exist
+        if tp and 'without' in how:
+            self.is_good()
+            placeholder = actual_placeholder = 'NOT'
+        elif tp and 'with' in how:
+            self.is_good()
+        elif (not tp) and ('without' in how):
+            placeholder = 'NOT'
+        elif (not tp) and ('with' in how):
+            actual_placeholder = 'NOT'
+
+        self._data_interface.log_input(
+            validate_method=f'text-validation BY:{how}',
+            expect=f'"{compare_with}" IS {placeholder} IN SCRAPPED TEXT',
+            actual=f'"{compare_with}" IS {actual_placeholder} IN "{scrapped_text}"',
+            result=self.result
+        )
+
+
+
 
     # def checkout_disable(self):
     #     """val

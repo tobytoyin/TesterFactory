@@ -35,7 +35,7 @@ class Factory:
         flow_maps = {}
 
         for sheet in sh:
-            flow_maps[sheet] = pd.read_excel(wb, sheet, index_col='index')
+            flow_maps[sheet] = pd.read_excel(wb, sheet)
         return flow_maps
 
     @property

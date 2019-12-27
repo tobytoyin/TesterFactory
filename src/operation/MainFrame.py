@@ -35,7 +35,7 @@ class MainFrame:
         ### process running ###
         print("process is starting --->")
         while run < process_max:
-            print(f"{run} \n")
+            print(f"PTR @ {run} \n")
             assert process.web_status == 200
             # geterator a cache for passing data
             data_interface = next(process_iter)
@@ -56,7 +56,7 @@ class MainFrame:
             # Debugging msg
             # print("Test validate cache passing --->")
             # print(data_interface.get_cache)
-            print(data_interface.get_log_cache)
+            print(f"**RESULT: {data_interface.get_log_cache}")
 
             # Block for manipulating iterator pointer
             # self._inline_logic_read(

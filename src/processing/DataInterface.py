@@ -12,6 +12,7 @@ class DataInterface:
         ### Data structure for running a single test process ###
         self._blueprint_cache = {
             'run_tc': '',
+            'run_index': '',
             'run_locator': '',
             'run_path': '',
             'run_method': '',
@@ -29,7 +30,9 @@ class DataInterface:
         ### Data structure for reporting ###
         self._log_cache = {
             'tc': '',
+            'map_index': '',
             'expect': '',
+            'validate_method': '',
             'actual': '',
             'result': '',
             'error_msg': '',

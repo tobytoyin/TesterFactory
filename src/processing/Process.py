@@ -54,7 +54,7 @@ class Process:
 
             # update data into DataInterface of current pointing row
             data_interface.data_str_load(
-                run_tc=self.tc,
+                run_tc=self.tc, run_index=row['index'],
                 run_locator=row['locator'], run_path=row['path'], run_method=row['method'],
                 run_logic=row['logic'], run_key=row['key'], run_value=value,
                 validate_method=row['validate_method'], validate_value=validate_value,
