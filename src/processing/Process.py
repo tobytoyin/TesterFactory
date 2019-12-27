@@ -44,11 +44,13 @@ class Process:
             data_interface = DataInterface()
             row = self.flow_map.loc[i]
 
-            # handle data selection using key
-            value = 'nan' if str(
-                row['key']) == 'nan' else self.test_input[row['key']]
-            validate_value = 'nan' if str(
-                row['validate_key']) == 'nan' else self.test_input[row['validate_key']]
+            ### handle data selection using key ###
+            # special handling, skip
+            pass_key = str(row['key']) == 'nan' or row['key'][0] == '%'
+            pass_val = str(row['validate_key']) == 'nan' or row['validate_key'][0] == '%'
+
+            value = 'nan' if pass_key else self.test_input[row['key']]
+            validate_value = 'nan' if pass_val else self.test_input[row['validate_key']]
 
             # update data into DataInterface of current pointing row
             data_interface.data_str_load(
@@ -88,7 +90,7 @@ class Process:
 
 
 f = Factory()
-case = 1
+case = 2
 t = f.test_inputs
 template = t['template'][case]
 a = f.flow_maps[template]

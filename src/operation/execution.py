@@ -9,6 +9,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementClickInterceptedException, ElementNotInteractableException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
+from bs4 import BeautifulSoup
 
 
 class Execution:
@@ -35,14 +36,6 @@ class Execution:
         self.element_exist = None  # determine whether a web-element exist or not
         self.logics = inline_arg_compile(self.blueprint_cache['run_logic'])
 
-    # @property
-    # def _logics(self, inline_logic):
-    #     output = []
-    #     logics = inline_arg_compile(inline_logic)
-    #     for logic in logics:
-    #         output.append(logic[''])
-    #     # TODO last activity
-
     def _logic_setup(self, default=''):
         """Setup for the inline-logic: setup default value if not logic"""
         assert default != '', "args--default requires a value"
@@ -60,14 +53,27 @@ class Execution:
             # by args value
             return logic_list[0]
 
-    def _logic_value(self, logic_name=''):
-        """Retreive the dict of a specific logic"""
+    def _logic_attr(self, logic_name='', attr='all'):
+        """
+        Retreive the attributes of a specific logic \n
+        logic_name -- the logic name of which one wants to retreive \n
+        attr -- 'all': retreive the dictionary of values;
+                'key': retreive a particular value
+        """
+        assert logic_name != '', "'logic_name' must not be empty for retrieval"
+
         # from child TestExecution
         if self.__class__ is TestExecution:
-            return self.run_args[logic_name]
+            if attr == 'all':
+                return self.run_args[logic_name]
+            else:
+                return self.run_args[logic_name][attr]
         # from child ValidateExecution
         elif self.__class__ is ValidateExecution:
-            return self.validate_args[logic_name]
+            if attr == 'all':
+                return self.validate_args[logic_name]
+            else:
+                return self.validate_args[logic_name][attr]
 
     def execute_func(self, execute_for='run'):
         """Execute function through string fetching"""
@@ -79,7 +85,7 @@ class Execution:
         func = getattr(self, self.blueprint_cache[key])
         func()
 
-        # add element into cache
+        ### add element into cache ###
         if self.element_exist is None:
             self._data_interface.cache_add(element_exist=0)
         else:
@@ -125,7 +131,6 @@ class TestExecution(Execution):
             self.element_exist = self.driver.find_element(locator, path)
         except NoSuchElementException:
             print('no such element')
-        print(self._data_interface.get_cache)
 
     def _group_elements(self):
         """Use to locate GROUPED web elements by INDEX"""
@@ -144,10 +149,10 @@ class TestExecution(Execution):
             # checkbox is to not click
             if choice != 1:
                 self._data_interface.log_input(
-                    test_case=self.tc, error_msg='web element out of reach')
+                    tc=self.tc, error_msg='web element out of reach')
         except NoSuchElementException:
             self._data_interface.log_input(
-                test_case=self.tc, error_msg='web element does not exist')
+                tc=self.tc, error_msg='web element does not exist')
 
     def _text_elements(self):
         """Locate GROUPED web elements by STRING"""
@@ -160,7 +165,7 @@ class TestExecution(Execution):
         # element not found
         if len(buttons) == 0:
             self._data_interface.log_input(
-                test_case=self.tc, error_msg='web element does not exist')
+                tc=self.tc, error_msg='web element does not exist')
 
         # check button text
         # stop loading when text is found
@@ -181,7 +186,7 @@ class TestExecution(Execution):
         # text not found
         if not match:
             self._data_interface.log_input(
-                test_case=self.tc, error_msg=f'No BUTTONS cointain {value}')
+                tc=self.tc, error_msg=f'No BUTTONS cointain {value}')
         else:
             self.element_exist = buttons[index]
 
@@ -324,7 +329,7 @@ class TestExecution(Execution):
         time.sleep(0.5)
         img_name = f'{img_where}{self.tc}_{file_name}.png'
         self._data_interface.log_input(
-            test_case=self.tc, output=f'IMAGE:{img_name}')
+            tc=self.tc, output=f'IMAGE:{img_name}')
 
     def input(self):
         """Input value into INPUT FIELDS"""
@@ -340,6 +345,72 @@ class TestExecution(Execution):
     #     self.wait.until(EC.frame_to_be_available_and_switch_to_it)
     #     driver.switch_to.default_content()
     #     driver.switch_to.frame(path)
+
+    def scrap(self):
+        """
+        Scrap some info from a particular tag
+        """
+        ### initiate ###
+        self._single_element()
+        args = self.blueprint_cache['run_key']
+        naming = ''
+        have_name = self._logic_setup(default='nameless')
+        text = ''
+
+        ### define variable naming ###
+        if have_name == 'name':
+            # retreive and set variable naming
+            naming = self._logic_attr(logic_name=have_name, attr='condition')
+        msg = f"{'<' + naming + '>' if naming != '' else ''}"
+
+        if self.element_exist:
+            # define expression components
+            comp = args.split('%')
+            comp.remove('')
+
+            ### Input validation ###
+            if len(comp) > 3:
+                # Incorrect syntax (too many components)
+                self._data_interface.log_input(
+                    tc=self.tc,
+                    error_msg=f"UNKNOWN EXPRESSION: %inner_tag OR %inner_tag%attr%attr_val OR empty")
+                print(f"> ERROR: {args} is an unknown syntax")
+                return None 
+
+            ### Scrapping start ###
+            soup_tag = comp[0]
+            inner_html = self.element_exist.get_attribute('innerHTML')
+            soup = BeautifulSoup(inner_html, features='html.parser')
+            if len(comp) == 3:
+                # Syntax looks like (%tag%attr%attr_val): Narrowly extracting specific text
+                # Syntax for BS4, e.g. span, {'class': 'some-class-val'}
+                # Use when a single innerHTML has multiple elements inside, e.g. div ~ {#span1, #span2, ...}
+                soup_dict = {comp[1]: comp[2]}
+                text_list = [tag.get_text() for tag in soup.find_all(soup_tag, soup_dict)]
+
+            elif len(comp) == 1:
+                # Syntax looks like (%tag): Broadly extracting all text
+                # Use to find text inside to whole innerHTML
+                text_list = [tag.get_text() for tag in soup.find_all(soup_tag)]
+            elif len(comp) == 0:
+                # No inputs, Use to find text inside the whole HTML
+                text_list = [self.element_exist.text]
+
+            # Result formatting
+            text = '|'.join(text_list)
+        else:
+            # web-element does not exist
+            print("> Element does not exist...")
+            pass
+            
+        self._data_interface.log_input(
+            tc=self.tc, output=f"TEXT{msg}:{text}")
+
+
+            
+
+        
+
 
     def goto(self):
         "webdriver goto a specific object"
@@ -371,7 +442,7 @@ class TestExecution(Execution):
         ### Unknown args ###
         else:
             self._data_interface.log_input(
-                test_case=self.tc, error_msg=f"UNKNOWN ARGS: {goto}")
+                tc=self.tc, error_msg=f"UNKNOWN ARGS: {goto}")
 
     def unload_file(self):
         """upload a file to UPLOAD"""
@@ -418,10 +489,13 @@ class ValidateExecution(Execution):
         """Retrieve inline args and inputs for validation"""
         return self.blueprint_cache['validate_logic_fetch']
 
-    def _logic_value(self, logic_name=''):
-        """Retreive the dict of a specific logic"""
-        return self.validate_logic_list[logic_name]
+    def is_good(self):
+        """The case is good and pass the testing"""
+        self.terminate = False
+        self.result = 'Pass'
+        return None
 
+    ### Set of functions for validation ###
     def checkout_validate(self):
         """
         validate whether a `checkout` element should be exist or not \n
@@ -449,13 +523,12 @@ class ValidateExecution(Execution):
 
         ### validation ###
         if tp | tn:
-            self.terminate = False
-            self.result = 'Pass'
+            self.is_good()
         else:
             pass
 
         self._data_interface.log_input(
-            test_case=self.tc,
+            tc=self.tc,
             expect=f"{validate_key} exists={validate_value}",
             actual=f"{validate_key} exists ?? TODO MSG",
             result=self.result)
@@ -481,10 +554,11 @@ class ValidateExecution(Execution):
         ### initiate ###
         current_url = self.driver.current_url
         redirect_to = self.validate_value
+        tp = None  # pass case
 
         # validate not needed
         if redirect_to == 'nan':
-            self.terminate = False
+            self.is_good()
             print("> test not needed")
             return None
 
@@ -495,14 +569,13 @@ class ValidateExecution(Execution):
             tp = redirect_to == current_url
 
         if tp:
-            self.terminate = False
-            self.result = 'Pass'
+            self.is_good()
         else:
             pass
 
         ### Log result ###
         self._data_interface.log_input(
-            test_case=self.tc,
+            tc=self.tc,
             expect=f"Redirect ({how}) to '{redirect_to}'",
             actual=f"Redirect ({how}) to '{current_url}'",
             result=self.result)

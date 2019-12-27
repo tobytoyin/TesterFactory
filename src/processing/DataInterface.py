@@ -27,7 +27,7 @@ class DataInterface:
         }
 
         ### Data structure for reporting ###
-        self._log_data = {
+        self._log_cache = {
             'tc': '',
             'expect': '',
             'actual': '',
@@ -47,8 +47,8 @@ class DataInterface:
         return self._blueprint_cache
 
     @property
-    def get_log_data(self):
-        return self._log_data
+    def get_log_cache(self):
+        return self._log_cache
 
     @property
     def get_cache(self):
@@ -106,10 +106,10 @@ class DataInterface:
         }
         for key, value in kwargs.items():
             try:
-                self._log_data[key] += msg_prefix[key].format(value)
+                self._log_cache[key] += msg_prefix[key].format(value)
             except KeyError:
-                self._log_data[key] = value
-        return self._log_data
+                self._log_cache[key] = value
+        return self._log_cache
 
     def cache_add(self, **kwargs):
         """Add data to cache"""

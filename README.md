@@ -34,6 +34,14 @@
 | :------------------------------: | :------------: | :------------: | :---------------------------------: | :----: |
 | url contains \<input> in the url |     string     |   --contain    | https://www.sample.com/string-input |  Pass  |
 
+## 3. Scrapping related functions
+
+**scrap**: Scrap information from a particular parent tag
+
+|    path    |                    key                    |
+| :--------: | :---------------------------------------: |
+| parent tag | (innerHtml-tag)->(tag-attr)->(attr-value) |
+
 ## N. Waiting functions
 
 **wait**: Specified n-seconds for the webdriver to wait.

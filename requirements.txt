@@ -4,3 +4,4 @@ xlrd
 selenium
 pillow
 bs4
+flake8

@@ -56,7 +56,7 @@ class MainFrame:
             # Debugging msg
             # print("Test validate cache passing --->")
             # print(data_interface.get_cache)
-            print(data_interface.get_log_data)
+            print(data_interface.get_log_cache)
 
             # Block for manipulating iterator pointer
             # self._inline_logic_read(
