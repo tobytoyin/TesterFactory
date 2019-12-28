@@ -35,7 +35,7 @@ class MainFrame:
         ### process running ###
         print("process is starting --->")
         while run < process_max:
-            print(f"PTR @ {run} \n")
+            print(f"PTR @ {run}==========")
             assert process.web_status == 200
             # geterator a cache for passing data
             data_interface = next(process_iter)
@@ -63,6 +63,7 @@ class MainFrame:
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
             del data_interface
             run += 1
+            print('\n')
 
             ### process terminated ###
         # print(data_interface.get_testing_reports)

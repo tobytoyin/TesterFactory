@@ -192,16 +192,6 @@ class TestExecution(Execution):
             self.element_exist = buttons[index]
 
     ### Logic behind performing actions. Generalized different cases with similar behaviours ###
-    # def _button_dec(self, func):
-    #     """Handle clicking button, e.g. real/ shadow button"""
-    #     def wrapper():
-    #         self._single_element()
-    #         if self.element_exist:
-    #             func()
-    #             self._data_interface.check_proceed()
-
-    #     return wrapper
-
     def _button_clicker(self):
         """Handle clicking button, e.g. real/ shadow button"""
         element = self.element_exist
@@ -212,12 +202,12 @@ class TestExecution(Execution):
             element.click()  # ordinary clicking
         # handle shadow button
         except ElementClickInterceptedException:
-            js_command = 'arguements[0].click();'
+            js_command = 'arguments[0].click();'
             driver.execute_script(js_command, element)
         except ElementNotInteractableException:
             element.submit()
         except AssertionError:
-            print("----> test: Button does not exist")
+            print("> LOCATOR: Button does not exist")
 
     def _input_writer(self):
         """Inject run_value into input fields"""
@@ -270,7 +260,7 @@ class TestExecution(Execution):
         """Check out whether a web-element should exist or not"""
         locator, path, driver = self._locators()
         checkout_list = driver.find_elements(locator, path)
-        print(f"---> checkout: {path}")
+        print(f"> checkout: {path}")
         if len(checkout_list) != 0:
             self.element_exist = checkout_list
 
@@ -331,7 +321,7 @@ class TestExecution(Execution):
         img_name = f'{img_where}{self.tc}_{file_name}.png'
         self._data_interface.log_input(output=f'IMAGE:{img_name}')
 
-    def input(self):
+    def write_input(self):
         """Input value into INPUT FIELDS"""
         self._single_element()
         if self.element_exist:
@@ -446,7 +436,7 @@ class TestExecution(Execution):
         element = self.element_exist
         element.send_keys(file_location)
 
-    def wait(self):
+    def driver_wait(self):
         """Force webdriver to wait for n-seconds"""
         ### initiate ###
         val = self._logic_setup(default='default')
@@ -454,7 +444,7 @@ class TestExecution(Execution):
         if 'default' in val:
             sec = 5
         elif 'for' in val:
-            sec = int(self._logic_value(logic_name='for')['condition'])
+            sec = int(self._logic_attr(logic_name='for', attr='condition'))
         time.sleep(sec)
 
 
@@ -521,36 +511,66 @@ class ValidateExecution(Execution):
         """
         validate whether a `checkout` element should be exist or not \n
 
+        args:
+        -----
+        `--exist` -- (default) The elements should exist\\ not \n
+        `--enable` -- The elements should exist & enabled\\ disabled \n
+
         Sheet-value:
         -----
-        Yes -- The element should exist \n
-        No  -- The element should not exist \n
+        (for `--exist`):\n
+        Yes -- The elements should exist \n
+        No  -- The elements should not exist \n
+
+        (for `--enable`):\n
+        Yes -- The elements should exist & enabled \n
+        No  -- The elements should not exist & disabled\n
 
         Output:
         ------
         Pass -- Element exist & check-for Yes; or Element not exist & check-for No \n
         Fail -- Element exist & check-for No; or Element not exist & check-for Yes \n
         """
-
+        ### initiate ###
+        assert self.cache != {}, "Cannot conduct validation without checking a specific elements."
         element_exist = self.cache['element_exist']
+        how = self._logic_setup(default='exist')
         validate_key = self.blueprint_cache['validate_key']
         validate_value = self.blueprint_cache['validate_value']
-        tp = (validate_value == 'Yes') & (element_exist != 0)  # true positive
-        tn = (validate_value == 'No') & (element_exist == 0)  # true negative
+        placeholder = 'EXIST'
+        tp = tn = None
+
+        # default lookup
+        if 'exist' in how:
+            tp = (validate_value == 'Yes') & (element_exist != 0)  # true positive
+            tn = (validate_value == 'No') & (element_exist == 0)  # true negative
+        # lookup if the element is enable
+        elif 'enable' in how:
+            placeholder = 'ENABLE'
+            # element should exist
+            if element_exist != 0:
+                # find whether all elements have is_enabled
+                enable_li = [el.is_enabled() for el in element_exist]
+                # find the set and test if the set contain False
+                have_disabled = False in set(enable_li)
+                # result
+                tp = (validate_value == 'Yes') & (have_disabled is False)
+                tn = (validate_value == 'No') & (have_disabled is True)
 
         ### Debugging value ###
         print(f"Element exist: {element_exist}")
         print(f"Validate value: {validate_value}")
 
         ### validation ###
-        if tp | tn:
+        if tp or tn:
             self.is_good()
         else:
             pass
 
         self._data_interface.log_input(
-            expect=f"{validate_key} exists={validate_value}",
-            actual=f"{validate_key} exists ?? TODO MSG",
+            validate_method=f"checkout-validation BY:{how}",
+            expect=f"{validate_key} {placeholder}={validate_value}",
+            actual=f"{validate_key} {placeholder}={tp if validate_value == 'Yes' else tn}",
             result=self.result)
 
     def redirect_validate(self):

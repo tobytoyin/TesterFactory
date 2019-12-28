@@ -90,7 +90,7 @@ class Process:
 
 
 f = Factory()
-case = 2
+case = 3
 t = f.test_inputs
 template = t['template'][case]
 a = f.flow_maps[template]
