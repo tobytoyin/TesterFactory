@@ -1,12 +1,11 @@
 from selenium import webdriver
-from src.processing.DataInterface import DataInterface
+from src.processing.DataInterface import Cache
 from src.Factory import Factory
 from src.helper import inline_arg_compile
 
 
 class Process:
     def __init__(self, driver, test_input, flow_map):
-        # , driver, data_interface,
         """
         Core processing for fetching data 
 
@@ -35,13 +34,13 @@ class Process:
         Move the pointer
        Outputs:
        ------
-       `data_interface`: A data cache for operation as well as report storage.
+       `caches`: A data cache for operation as well as report storage.
        """
         # pointer move in a step of flow_map
         i = self.i
 
         if i <= self.n:
-            data_interface = DataInterface()
+            cache = Cache()
             row = self.flow_map.loc[i]
 
             ### handle data selection using key ###
@@ -53,7 +52,7 @@ class Process:
             validate_value = 'nan' if pass_val else self.test_input[row['validate_key']]
 
             # update data into DataInterface of current pointing row
-            data_interface.data_str_load(
+            cache.data_str_load(
                 run_tc=self.tc, run_index=row['index'],
                 run_locator=row['locator'], run_path=row['path'], run_method=row['method'],
                 run_logic=row['logic'], run_key=row['key'], run_value=value,
@@ -64,11 +63,11 @@ class Process:
             logic_dict = inline_arg_compile(str(row['logic']))
             validate_logic_dict = inline_arg_compile(
                 str(row['validate_logic']))
-            data_interface.data_any_load(
+            cache.data_any_load(
                 run_logic_fetch=logic_dict, validate_logic_fetch=validate_logic_dict)
 
             self.i += 1
-            return data_interface
+            return cache
         else:
             raise StopIteration
 
@@ -90,7 +89,7 @@ class Process:
 
 
 f = Factory()
-case = 3
+case = 4
 t = f.test_inputs
 template = t['template'][case]
 a = f.flow_maps[template]
@@ -105,5 +104,5 @@ test_data = {
     'flow_maps': a,
     'test_inputs': t,
     'process': p
-    # 'data_interface': n
+    # 'cache': n
 }

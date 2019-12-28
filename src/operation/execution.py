@@ -19,24 +19,30 @@ class Execution:
     Arguments:
     ------
     `driver` (Selenium webdriver): A predefined webdriver;
-    `data_interface` (Process object, iterator): A set of data for selenium to work on.
+    `cache` (Process object, iterator): A set of data for selenium to work on.
 
     Error Handling:
     ------
     Errors will be treated as exception and reported in testing log
     """
 
-    def __init__(self, driver, data_interface):
+    def __init__(self, driver, cache):
+
+        # WebDriver Setup
         self.driver = driver
         self.driver.implicitly_wait(10)
         self.driver_wait = WebDriverWait(self.driver, 10)
-        self._data_interface = data_interface
-        self.blueprint_cache = self._data_interface.get_blueprint_cache
-        self.tc = self.blueprint_cache['run_tc']
-        self.map_index = self.blueprint_cache['run_index']
-        self.element_exist = None  # determine whether a web-element exist or not
-        self.logics = inline_arg_compile(self.blueprint_cache['run_logic'])
 
+        # Caches
+        self._cache = cache
+        self.bp_cache = self._cache.get_bp_cache
+
+        # Values that commonly used
+        self.tc = self.bp_cache['run_tc']  # test case id
+        self.element_exist = None  # determine whether a web-element exist or not
+        # self.logics = inline_arg_compile(self.bp_cache['run_logic'])
+
+    ##### FUNCTIONS THAT VARY BY CHILD_CLASS #####
     def _logic_setup(self, default=''):
         """Setup for the inline-logic: setup default value if not logic"""
         assert default != '', "args--default requires a value"
@@ -56,9 +62,12 @@ class Execution:
     def _logic_attr(self, logic_name='', attr='all'):
         """
         Retreive the attributes of a specific logic \n
-        logic_name -- the logic name of which one wants to retreive \n
-        attr -- 'all': retreive the dictionary of values;
-                'key': retreive a particular value
+    
+        Inputs:
+        -----
+        `logic_name='func_name'` -- the logic name of which one wants to retreive \n
+        `attr='all'` -- 'all': retreive the dictionary of values;
+                'key': retreive a particular value from {'condition', 'input'}
         """
         assert logic_name != '', "'logic_name' must not be empty for retrieval"
 
@@ -75,26 +84,28 @@ class Execution:
             else:
                 return self.validate_args[logic_name][attr]
 
+    ##### EXECUTION FUNCTION #####
     def execute_func(self, execute_for='run'):
         """Execute function through string fetching"""
-        assert execute_for in ['run', 'validate'], "Usage: execute_for in ['run', 'validate']"
+        
+        assert execute_for in {'run', 'validate'}, "Usage: execute_for in {'run', 'validate'}"
         # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
-        if str(self.blueprint_cache[key]) == 'nan':
+        if str(self.bp_cache[key]) == 'nan':
             return None
-        func = getattr(self, self.blueprint_cache[key])
+        func = getattr(self, self.bp_cache[key])
         func()
 
         ### add element into cache ###
         if self.element_exist is None:
-            self._data_interface.cache_add(element_exist=0)
+            self._cache.cache_add(element_exist=0)
         else:
-            self._data_interface.cache_add(element_exist=self.element_exist)
+            self._cache.cache_add(element_exist=self.element_exist)
 
         ### add identification to log_cache ###
         # tc -- id for test case data
         # map_index -- id for execution logic row
-        self._data_interface.log_input(tc=self.tc, map_index=self.map_index)
+        self._cache.log_input(tc=self.tc, map_index=self.bp_cache['run_index'])
 
 
 class TestExecution(Execution):
@@ -102,15 +113,15 @@ class TestExecution(Execution):
     Sub-class of `Execution()` for executing testing steps
     """
 
-    def __init__(self, driver, data_interface):
-        super().__init__(driver, data_interface)
+    def __init__(self, driver, cache):
+        super().__init__(driver, cache)
         # the logic to be triggered
         self.run_logic_list = list(self.run_args.keys())
 
     @property
     def run_args(self):
         """Retrieve inline args and input for running"""
-        return self.blueprint_cache['run_logic_fetch']
+        return self.bp_cache['run_logic_fetch']
 
     ### Preparation Functions ###
 
@@ -120,8 +131,8 @@ class TestExecution(Execution):
         ------
         `(locator, path)` --
         """
-        path = self.blueprint_cache['run_path']
-        locator = self.blueprint_cache['run_locator'].lower()
+        path = self.bp_cache['run_path']
+        locator = self.bp_cache['run_locator'].lower()
         if locator in ['class', 'tag']:
             return f'{locator} name', path, self.driver
         elif locator == 'css':
@@ -140,7 +151,7 @@ class TestExecution(Execution):
     def _group_elements(self):
         """Use to locate GROUPED web elements by INDEX"""
         locator, path, driver = self._locators()
-        value = self.blueprint_cache['run_value'].lower()
+        value = self.bp_cache['run_value'].lower()
         choice = 0  # if entry don't have choice, assume to select first element
 
         if value == 'false':
@@ -153,21 +164,21 @@ class TestExecution(Execution):
         except IndexError:
             # checkbox is to not click
             if choice != 1:
-                self._data_interface.log_input(error_msg='web element out of reach')
+                self._cache.log_input(error_msg='web element out of reach')
         except NoSuchElementException:
-            self._data_interface.log_input(error_msg='web element does not exist')
+            self._cache.log_input(error_msg='web element does not exist')
 
     def _text_elements(self):
         """Locate GROUPED web elements by STRING"""
         locator, path, driver = self._locators()
-        value = self.blueprint_cache['run_value']
+        value = self.bp_cache['run_value']
 
         # locate buttons
         buttons = driver.find_elements(locator, path)
 
         # element not found
         if len(buttons) == 0:
-            self._data_interface.log_input(error_msg='web element does not exist')
+            self._cache.log_input(error_msg='web element does not exist')
 
         # check button text
         # stop loading when text is found
@@ -187,7 +198,7 @@ class TestExecution(Execution):
 
         # text not found
         if not match:
-            self._data_interface.log_input(error_msg=f'No BUTTONS cointain {value}')
+            self._cache.log_input(error_msg=f'No BUTTONS cointain {value}')
         else:
             self.element_exist = buttons[index]
 
@@ -212,7 +223,7 @@ class TestExecution(Execution):
     def _input_writer(self):
         """Inject run_value into input fields"""
         # initiate
-        input_value = self.blueprint_cache['run_value']
+        input_value = self.bp_cache['run_value']
         element = self.element_exist
         driver = self.driver
 
@@ -238,7 +249,7 @@ class TestExecution(Execution):
         `--reject` -- reject ALERT BOX
         """
         self.driver_wait.until(EC.alert_is_present())
-        logic_fetch = self.blueprint_cache['run_logic_fetch']
+        logic_fetch = self.bp_cache['run_logic_fetch']
 
         alert_box = self.driver.switch_to.alert_box
 
@@ -257,19 +268,47 @@ class TestExecution(Execution):
         return None
 
     def checkout(self):
-        """Check out whether a web-element should exist or not"""
+        """
+        Check out whether a web-element should exist or not
+        args:
+        ------
+        `--jumpto(Bool, i)` -- Bool = {Yes, No}, i = {0,1,2,...,n-th map_index}. \n
+        If Bool = Yes, and checkout element exist, jumpto i-th row of the blueprint \n
+        If Bool = No, and checkout element NOT exist, jumpto i-th row of the blueprint
+        """
+        ### initiate ###
         locator, path, driver = self._locators()
-        checkout_list = driver.find_elements(locator, path)
+        how = self._logic_setup(default='checkout')
+        checkout_list = driver.find_elements(locator, path)  # This should be a []
+        checkout_num = len(checkout_list)
+
+        ### conduct Checkout ###
         print(f"> checkout: {path}")
-        if len(checkout_list) != 0:
+        if checkout_num != 0:
             self.element_exist = checkout_list
+
+        ### run inline ###
+        if 'jumpto' in how:
+            attr = self._logic_attr('jumpto', 'all')
+            # possible cases that run this logic
+            yes_exist = attr['condition'] == 'Yes' & checkout_num != 0
+            no_not_exist = attr['condition'] == 'No' & checkout_num == 0
+
+            if yes_exist:  # Bool = Yes & Exist ==> jump
+                self._cache
+
+
+
+
+
+        
 
     def click_button(self):
         """method = click_button"""
         self._single_element()
         if self.element_exist:
             self._button_clicker()
-            self._data_interface.check_proceed()
+            self._cache.check_proceed()
 
     def click_checkbox(self):
         """Click a CHECKBOX"""
@@ -299,7 +338,7 @@ class TestExecution(Execution):
 
         if self.element_exist():
             locator, path, driver = self._locators()
-            value = self.blueprint_cache['run_value']
+            value = self.bp_cache['run_value']
             js_template = 'document.{method}("{path}").value = "{value}";'.format(
                 path=path, value=value)
 
@@ -315,11 +354,11 @@ class TestExecution(Execution):
     def screencap(self, file_name):
         """Take a full screenshot"""
         if file_name == '':
-            file_name = self.blueprint_cache['run_value']
+            file_name = self.bp_cache['run_value']
         img_where = '/'
         time.sleep(0.5)
         img_name = f'{img_where}{self.tc}_{file_name}.png'
-        self._data_interface.log_input(output=f'IMAGE:{img_name}')
+        self._cache.log_input(output=f'IMAGE:{img_name}')
 
     def write_input(self):
         """Input value into INPUT FIELDS"""
@@ -342,7 +381,7 @@ class TestExecution(Execution):
         """
         ### initiate ###
         self._single_element()
-        args = self.blueprint_cache['run_key']
+        args = self.bp_cache['run_key']
         naming = ''
         have_name = self._logic_setup(default='nameless')
         text = ''
@@ -361,7 +400,7 @@ class TestExecution(Execution):
             ### Input validation ###
             if len(comp) > 3:
                 # Incorrect syntax (too many components)
-                self._data_interface.log_input(
+                self._cache.log_input(
                     error_msg=f"UNKNOWN EXPRESSION: %inner_tag OR %inner_tag%attr%attr_val OR empty")
                 print(f"> ERROR: {args} is an unknown syntax")
                 return None 
@@ -393,8 +432,8 @@ class TestExecution(Execution):
             pass
 
         output = f"TEXT{msg}:{text}"
-        self._data_interface.log_input(output=output)
-        self._data_interface.cache_add(text=output)  # add to cache for validation if needed
+        self._cache.log_input(output=output)
+        self._cache.cache_add(text=output)  # add to cache for validation if needed
 
     def goto(self):
         "webdriver goto a specific object"
@@ -404,7 +443,7 @@ class TestExecution(Execution):
 
         ### GOTO URL ###
         if 'url' in goto:
-            url = self.blueprint_cache['run_value']
+            url = self.bp_cache['run_value']
             assert url[0:4] == 'http', "'url' should start with 'http' or 'https'"
             driver.get(url)
             print(f"> {self.tc} travelling to: '{url}'")
@@ -425,14 +464,14 @@ class TestExecution(Execution):
 
         ### Unknown args ###
         else:
-            self._data_interface.log_input(error_msg=f"UNKNOWN ARGS: {goto}")
+            self._cache.log_input(error_msg=f"UNKNOWN ARGS: {goto}")
 
     def unload_file(self):
         """upload a file to UPLOAD"""
         from os import getcwd
         self._single_element()
         file_location = getcwd() + '\\resources\\input\\' + \
-            self.blueprint_cache['run_value']
+            self.bp_cache['run_value']
         element = self.element_exist
         element.send_keys(file_location)
 
@@ -453,10 +492,10 @@ class ValidateExecution(Execution):
     Child-class of `Execution()` for validating testing outputs
     """
 
-    def __init__(self, driver, data_interface):
-        super().__init__(driver, data_interface)
-        self.cache = data_interface.get_cache
-        self.blueprint_cache = data_interface.get_blueprint_cache
+    def __init__(self, driver, cache):
+        super().__init__(driver, cache)
+        self.cache = cache.get_cache
+        self.bp_cache = cache.get_bp_cache
         # the validate logic to be triggered
         self.validate_logic_list = list(self.validate_args.keys())
         self.terminate = True
@@ -465,12 +504,12 @@ class ValidateExecution(Execution):
     @property
     def validate_value(self):
         """Retrieve the value to validate for"""
-        return self.blueprint_cache['validate_value']
+        return self.bp_cache['validate_value']
 
     @property
     def validate_args(self):
         """Retrieve inline args and inputs for validation"""
-        return self.blueprint_cache['validate_logic_fetch']
+        return self.bp_cache['validate_logic_fetch']
 
     def is_good(self):
         """The case is good and pass the testing"""
@@ -484,7 +523,7 @@ class ValidateExecution(Execution):
         """
         ### initiate ###
         compare_with = self.validate_value
-        cached = self._data_interface.get_cache['text']
+        cached = self._cache.get_cache['text']
         how = self._logic_setup(default='strict')
 
         ### Load info from cache-text ###
@@ -535,8 +574,8 @@ class ValidateExecution(Execution):
         assert self.cache != {}, "Cannot conduct validation without checking a specific elements."
         element_exist = self.cache['element_exist']
         how = self._logic_setup(default='exist')
-        validate_key = self.blueprint_cache['validate_key']
-        validate_value = self.blueprint_cache['validate_value']
+        validate_key = self.bp_cache['validate_key']
+        validate_value = self.bp_cache['validate_value']
         placeholder = 'EXIST'
         tp = tn = None
 
@@ -567,7 +606,7 @@ class ValidateExecution(Execution):
         else:
             pass
 
-        self._data_interface.log_input(
+        self._cache.log_input(
             validate_method=f"checkout-validation BY:{how}",
             expect=f"{validate_key} {placeholder}={validate_value}",
             actual=f"{validate_key} {placeholder}={tp if validate_value == 'Yes' else tn}",
@@ -614,7 +653,7 @@ class ValidateExecution(Execution):
             pass
 
         ### Log result ###
-        self._data_interface.log_input(
+        self._cache.log_input(
             expect=f"Redirect ({how}) to '{redirect_to}'",
             actual=f"Redirect ({how}) to '{current_url}'",
             result=self.result)
@@ -646,19 +685,9 @@ class ValidateExecution(Execution):
         elif (not tp) and ('with' in how):
             actual_placeholder = 'NOT'
 
-        self._data_interface.log_input(
+        self._cache.log_input(
             validate_method=f'text-validation BY:{how}',
             expect=f'"{compare_with}" IS {placeholder} IN SCRAPPED TEXT',
             actual=f'"{compare_with}" IS {actual_placeholder} IN "{scrapped_text}"',
             result=self.result
         )
-
-
-
-
-    # def checkout_disable(self):
-    #     """val
-
-    # # # testing
-    # # test_exe = TestExecution(test_data['driver'], test_data['data_interface'])
-    # # test_exe.checkout()

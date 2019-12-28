@@ -11,7 +11,7 @@ class Factory:
 
     def book_and_sheets(self, book_key=''):
         """
-        Arguments: 
+        Arguments:
         -----
         --book_key: 'key of spreadsheet in controller.json
 
