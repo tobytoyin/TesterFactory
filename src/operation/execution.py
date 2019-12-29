@@ -62,7 +62,6 @@ class Execution:
     def _logic_attr(self, logic_name='', attr='all'):
         """
         Retreive the attributes of a specific logic \n
-    
         Inputs:
         -----
         `logic_name='func_name'` -- the logic name of which one wants to retreive \n
@@ -86,13 +85,12 @@ class Execution:
 
     ##### EXECUTION FUNCTION #####
     def execute_func(self, execute_for='run'):
-        """Execute function through string fetching"""
-        
+        """Trigger function through string in the blueprint"""
         assert execute_for in {'run', 'validate'}, "Usage: execute_for in {'run', 'validate'}"
         # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
         if str(self.bp_cache[key]) == 'nan':
-            return None
+            return None  # break, no func to execute
         func = getattr(self, self.bp_cache[key])
         func()
 
@@ -250,20 +248,13 @@ class TestExecution(Execution):
         `--reject` -- reject ALERT BOX
         """
         self.driver_wait.until(EC.alert_is_present())
-        logic_fetch = self.bp_cache['run_logic_fetch']
-
+        how = self._logic_setup(default='accept')
         alert_box = self.driver.switch_to.alert_box
 
         # default is accept
-        if not logic_fetch:
+        if 'accept' in how:
             alert_box.accept()
-            time.sleep(1)  # ?
-            return None
-
-        # by inline values
-        if 'accept' in logic_fetch.keys():
-            alert_box.accept()
-        elif 'reject' in logic_fetch.keys():
+        elif 'reject' in how:
             alert_box.reject()
         time.sleep(1)  # ?
         return None
@@ -273,7 +264,8 @@ class TestExecution(Execution):
         Check out whether a web-element should exist or not
         args:
         ------
-        `--jumpto(value, i)` -- value = {Yes, No, Key}, i = {0,1,2,...,n-th map_index}. \n
+        `--jumpto(value={Yes, No, Key}, i={0,1,..., n-th})` -- i-th determines which the exact ptr should be. \n
+        `--skipby(value={Yes, No, Key}, d={1,2,...})` -- d-th determines the relative position ptr should skip. \n
         If value = Yes, and checkout element exist, jumpto i-th row of the blueprint \n
         If value = No, and checkout element NOT exist, jumpto i-th row of the blueprint \n
         If value = Key, it will lookup the {Yes, No} in run_value and apply the above conditions.
@@ -289,8 +281,9 @@ class TestExecution(Execution):
             self.element_exist = checkout_list
 
         ### run inline ###
-        if 'jumpto' in how:
-            attr = self._logic_attr('jumpto', 'all')
+        if (any(k in ['jumpto', 'skipby'] for k in how)):
+            key = 'jumpto' if 'jumpto' in how else 'skipby'
+            attr = self._logic_attr(key, 'all')
             gate = self.bp_cache['run_value'] if attr['condition'] == 'Key' else attr['condition']
 
             # possible cases that run this logic
@@ -299,7 +292,7 @@ class TestExecution(Execution):
             print(f"> gate={gate}, len={checkout_num}")
 
             if yes_exist or no_not_exist:  # value = Yes & Exist ==> jump
-                self._cache.cache_add(ptr=attr['input'])
+                self._cache.cache_add(**{key: attr['input']})
 
     def click_button(self):
         """method = click_button"""
@@ -366,7 +359,7 @@ class TestExecution(Execution):
         img_where = '/'
         time.sleep(0.5)
         img_name = f'{img_where}{self.tc}_{file_name}.png'
-        self._cache.log_input(output=f'IMAGE:{img_name}')
+        self._cache.log_input(tc=self.tc, output=f'IMAGE:{img_name}')
 
     def write_input(self):
         """Input value into INPUT FIELDS"""
@@ -398,7 +391,7 @@ class TestExecution(Execution):
         if 'name' in have_name:
             # retreive and set variable naming
             naming = self._logic_attr(logic_name='name', attr='condition')
-        msg = f"{'<' + naming + '>' if naming != '' else ''}"
+        varname = f"{'<' + naming + '>' if naming != '' else ''}"
 
         if self.element_exist:
             # define expression components
@@ -411,7 +404,7 @@ class TestExecution(Execution):
                 self._cache.log_input(
                     error_msg=f"UNKNOWN EXPRESSION: %inner_tag OR %inner_tag%attr%attr_val OR empty")
                 print(f"> ERROR: {args} is an unknown syntax")
-                return None 
+                return None
 
             ### Scrapping start ###
             soup_tag = comp[0]
@@ -439,8 +432,8 @@ class TestExecution(Execution):
             print("> Element does not exist...")
             pass
 
-        output = f"TEXT{msg}:{text}"
-        self._cache.log_input(output=output)
+        output = f"TEXT{varname}:{text}"
+        self._cache.log_input(tc=self.tc, output=output)
         self._cache.cache_add(text=output)  # add to cache for validation if needed
 
     def goto(self):

@@ -109,10 +109,10 @@ class Cache:
             'result': "RESULT={}"
         }
         for key, value in kwargs.items():
-            try:
-                self._log_cache[key] += msg_prefix[key].format(value)
-            except KeyError:
+            if key == 'tc':
                 self._log_cache[key] = value
+            else:
+                self._log_cache[key] += msg_prefix[key].format(value)
         return self._log_cache
 
     def cache_add(self, **kwargs):

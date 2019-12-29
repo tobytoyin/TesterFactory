@@ -7,8 +7,8 @@ from datetime import datetime
 class MainFrame:
     """
     MainFrame is used to take a single data needed from Process and start the testing process.
-    Handle logical operation of the whole framework. 
-    The output will then query another data needed and continue. 
+    Handle logical operation of the whole framework.
+    The output will then query another data needed and continue.
     Argument:
     ------
     `process` (Process object)
@@ -26,18 +26,19 @@ class MainFrame:
 
     def start(self):
         "Start to execute a test case"
-        ### initiate variables ###
+        ### initialize variables ###
         process = self.process
-        run = 0  # determine to terminate/ continue
         process_iter = iter(process)
+        process_cur = process_iter.i
         process_max = process_iter.n
         t_start = datetime.now()
 
         ### process running ###
-        while run < process_max:
-            print(f"PTR @ {run}==========")
+        while process_cur < process_max:
+            print(f"PTR @ {process_iter.i}==========")
             assert process.web_status == 200
             # geterator a cache for passing data
+            ptr = None
             data_interface = next(process_iter)
             # print(data_interface.get_blueprint_cache)
 
@@ -58,8 +59,13 @@ class MainFrame:
             # print(data_interface.get_cache)
 
             # Block for manipulating iterator pointer
-            if 'ptr' in data_interface.get_cache:
-                ptr = data_interface.get_cache['ptr']
+            if 'jumpto' in data_interface.get_cache:
+                ptr = int(data_interface.get_cache['jumpto'])
+            elif 'skipby' in data_interface.get_cache:
+                ptr = process_iter.i + int(data_interface.get_cache['skipby'])
+                
+            if ptr is not None:
+                self.process.pointer_change(value=ptr)
 
             # Debug print
             if self.printout:
@@ -72,41 +78,41 @@ class MainFrame:
             # self._inline_logic_read(
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
             del data_interface
-            run += 1
+            process_cur = process_iter.i  # retreive current position
 
             ### process terminated ###
         # print(data_interface.get_testing_reports)
 
-    def _inline_logic_read(self, test_exe, logic_list):
-        """
-        Read inline logic, e.g. --jumpto(Yes,3)
-        Arguments: 
-        ------
-        `logic_list` (list of dict): list containing dictionaries with keys `['func', 'condition', 'output']`
-        """
-        # no inline-args to work on
-        if len(logic_list) == 0:
-            return None
-        for arg in logic_list:  # loop each dict
-            if arg['func'] == 'jumpto':
-                self._jumpto_logic(test_exe, arg)
+    # def _inline_logic_read(self, test_exe, logic_list):
+    #     """
+    #     Read inline logic, e.g. --jumpto(Yes,3)
+    #     Arguments:
+    #     ------
+    #     `logic_list` (list of dict): list containing dictionaries with keys `['func', 'condition', 'output']`
+    #     """
+    #     # no inline-args to work on
+    #     if len(logic_list) == 0:
+    #         return None
+    #     for arg in logic_list:  # loop each dict
+    #         if arg['func'] == 'jumpto':
+    #             self._jumpto_logic(test_exe, arg)
 
-    def _jumpto_logic(self, test_exe, arg):
-        element_exist = test_exe.element_exist
-        # print(element_exist)
-        # print(arg)
-        if (element_exist is None) & (arg['condition'] == 'No'):
-            self.process.pointer_change(
-                switch_method='jumpto', value=arg['input'])
-            print(f"pointer change to {self.process.i}")
+    # def _jumpto_logic(self, test_exe, arg):
+    #     element_exist = test_exe.element_exist
+    #     # print(element_exist)
+    #     # print(arg)
+    #     if (element_exist is None) & (arg['condition'] == 'No'):
+    #         self.process.pointer_change(
+    #             switch_method='jumpto', value=arg['input'])
+    #         print(f"pointer change to {self.process.i}")
 
-        elif (element_exist is not None) & (arg['condition'] == 'Yes'):
-            self.process.pointer_change(
-                switch_method='jumpto', value=arg['output'])
-            print(f"pointer change to {self.process.i}")
-        else:
-            pass
-            print("some error ")
+    #     elif (element_exist is not None) & (arg['condition'] == 'Yes'):
+    #         self.process.pointer_change(
+    #             switch_method='jumpto', value=arg['output'])
+    #         print(f"pointer change to {self.process.i}")
+    #     else:
+    #         pass
+    #         print("some error ")
 
 
 class Error(Exception):

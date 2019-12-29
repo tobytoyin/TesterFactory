@@ -22,8 +22,6 @@ class Process:
         # define unique identity
         self.tc = self.test_input['test_id']
 
-        self.special_regex = r"(->|nan)"
-
     def __iter__(self):
         self.i = 0
         self.n = len(self.flow_map)
@@ -71,10 +69,11 @@ class Process:
         else:
             raise StopIteration
 
-    def pointer_change(self, switch_method='next', value=1):
-        if switch_method == 'jumpto':
-            self.i = int(value)
-        return self
+    def pointer_change(self, value):
+        """Change the ptr of the iter obj"""
+        assert (value > 0) | (value < self.n), f"value={value} out of reach: min=0, max={self.n}"
+        self.i = int(value)
+        return None
 
     @property
     def web_status(self):
