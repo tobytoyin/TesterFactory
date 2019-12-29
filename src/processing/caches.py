@@ -33,9 +33,9 @@ class Cache:
             'tc': '',
             'map_index': '',
             'expect': '',
-            'validate_method': '',
             'actual': '',
             'result': '',
+            'validate_method': '',
             'error_msg': '',
             'output': ''
         }
@@ -120,3 +120,6 @@ class Cache:
         for key, value in kwargs.items():
             self._cache[key] = value
         return self.get_cache
+
+    def is_empty(self):
+        return self.get_cache['tc'] == ''

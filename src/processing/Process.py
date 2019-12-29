@@ -1,5 +1,5 @@
 from selenium import webdriver
-from src.processing.DataInterface import Cache
+from src.processing.caches import Cache
 from src.Factory import Factory
 from src.helper import inline_arg_compile
 

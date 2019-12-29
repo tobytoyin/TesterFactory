@@ -102,10 +102,11 @@ class Execution:
         else:
             self._cache.cache_add(element_exist=self.element_exist)
 
-        ### add identification to log_cache ###
+        ### add identification to log_cache when Validation###
         # tc -- id for test case data
         # map_index -- id for execution logic row
-        self._cache.log_input(tc=self.tc, map_index=self.bp_cache['run_index'])
+        if execute_for == 'validate':
+            self._cache.log_input(tc=self.tc, map_index=self.bp_cache['run_index'])
 
 
 class TestExecution(Execution):
@@ -272,9 +273,10 @@ class TestExecution(Execution):
         Check out whether a web-element should exist or not
         args:
         ------
-        `--jumpto(Bool, i)` -- Bool = {Yes, No}, i = {0,1,2,...,n-th map_index}. \n
-        If Bool = Yes, and checkout element exist, jumpto i-th row of the blueprint \n
-        If Bool = No, and checkout element NOT exist, jumpto i-th row of the blueprint
+        `--jumpto(value, i)` -- value = {Yes, No, Key}, i = {0,1,2,...,n-th map_index}. \n
+        If value = Yes, and checkout element exist, jumpto i-th row of the blueprint \n
+        If value = No, and checkout element NOT exist, jumpto i-th row of the blueprint \n
+        If value = Key, it will lookup the {Yes, No} in run_value and apply the above conditions.
         """
         ### initiate ###
         locator, path, driver = self._locators()
@@ -283,39 +285,45 @@ class TestExecution(Execution):
         checkout_num = len(checkout_list)
 
         ### conduct Checkout ###
-        print(f"> checkout: {path}")
         if checkout_num != 0:
             self.element_exist = checkout_list
 
         ### run inline ###
         if 'jumpto' in how:
             attr = self._logic_attr('jumpto', 'all')
+            gate = self.bp_cache['run_value'] if attr['condition'] == 'Key' else attr['condition']
+
             # possible cases that run this logic
-            yes_exist = attr['condition'] == 'Yes' & checkout_num != 0
-            no_not_exist = attr['condition'] == 'No' & checkout_num == 0
+            yes_exist = gate == 'Yes' and checkout_num != 0
+            no_not_exist = gate == 'No' and checkout_num == 0
+            print(f"> gate={gate}, len={checkout_num}")
 
-            if yes_exist:  # Bool = Yes & Exist ==> jump
-                self._cache
-
-
-
-
-
-        
+            if yes_exist or no_not_exist:  # value = Yes & Exist ==> jump
+                self._cache.cache_add(ptr=attr['input'])
 
     def click_button(self):
         """method = click_button"""
         self._single_element()
-        if self.element_exist:
+        try:
             self._button_clicker()
             self._cache.check_proceed()
+        except NoSuchElementException:
+            pass
+        # if self.element_exist:
+        #     self._button_clicker()
+        #     self._cache.check_proceed()
 
     def click_checkbox(self):
         """Click a CHECKBOX"""
         self._group_elements()
-        if self.element_exist:
+        try:
             self._button_clicker()
             time.sleep(0.5)
+        # if self.element_exist:
+        #     self._button_clicker()
+        #     time.sleep(0.5)
+        except NoSuchElementException:
+            pass
 
     def click_radio(self):
         """Click a RADIO button"""
@@ -597,8 +605,8 @@ class ValidateExecution(Execution):
                 tn = (validate_value == 'No') & (have_disabled is True)
 
         ### Debugging value ###
-        print(f"Element exist: {element_exist}")
-        print(f"Validate value: {validate_value}")
+        # print(f"Element exist: {element_exist}")
+        # print(f"Validate value: {validate_value}")
 
         ### validation ###
         if tp or tn:

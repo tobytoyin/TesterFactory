@@ -1,4 +1,4 @@
-from src.helper import inline_arg_compile
+from src.helper import inline_arg_compile, print_table
 from src.operation.execution import TestExecution, ValidateExecution
 from src.processing.Process import Process, test_data
 from datetime import datetime
@@ -14,9 +14,10 @@ class MainFrame:
     `process` (Process object)
     """
 
-    def __init__(self, process):
+    def __init__(self, process, printout=True):
         self.testing_reports = []
         self.process = process
+        self.printout = printout
 
     @property
     def get_testing_reports(self):
@@ -33,7 +34,6 @@ class MainFrame:
         t_start = datetime.now()
 
         ### process running ###
-        print("process is starting --->")
         while run < process_max:
             print(f"PTR @ {run}==========")
             assert process.web_status == 200
@@ -56,14 +56,23 @@ class MainFrame:
             # Debugging msg
             # print("Test validate cache passing --->")
             # print(data_interface.get_cache)
-            print(f"**RESULT: {data_interface.get_log_cache}")
 
             # Block for manipulating iterator pointer
+            if 'ptr' in data_interface.get_cache:
+                ptr = data_interface.get_cache['ptr']
+
+            # Debug print
+            if self.printout:
+                header_b = ('Blueprint fields', 'Values')
+                header_c = ('Cached fields', 'Values')
+                print_table(data_interface.get_log_cache, header=header_b, title='Results', style=('=', '-'))
+                print_table(data_interface.get_cache, header=header_c, title='Cache', style=('~', '-'))
+                print('\n')
+
             # self._inline_logic_read(
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
             del data_interface
             run += 1
-            print('\n')
 
             ### process terminated ###
         # print(data_interface.get_testing_reports)
@@ -86,12 +95,12 @@ class MainFrame:
         element_exist = test_exe.element_exist
         # print(element_exist)
         # print(arg)
-        if (element_exist == None) & (arg['condition'] == 'No'):
+        if (element_exist is None) & (arg['condition'] == 'No'):
             self.process.pointer_change(
                 switch_method='jumpto', value=arg['input'])
             print(f"pointer change to {self.process.i}")
 
-        elif (element_exist != None) & (arg['condition'] == 'Yes'):
+        elif (element_exist is not None) & (arg['condition'] == 'Yes'):
             self.process.pointer_change(
                 switch_method='jumpto', value=arg['output'])
             print(f"pointer change to {self.process.i}")
