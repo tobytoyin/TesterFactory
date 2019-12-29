@@ -102,18 +102,12 @@ class Cache:
 
     def log_input(self, **kwargs):
         """Function for adding log for each testing process"""
-        msg_prefix = {
-            'error_msg': "ERROR={}",
-            'expect': "EXPECTED={}",
-            'actual': "ACTUAL={}",
-            'result': "RESULT={}"
-        }
         for key, value in kwargs.items():
             if key == 'tc':
                 self._log_cache[key] = value
             else:
-                self._log_cache[key] += msg_prefix[key].format(value)
-        return self._log_cache
+                self._log_cache[key] += f"{value}; "
+        return self.get_log_cache
 
     def cache_add(self, **kwargs):
         """Add data to cache"""
@@ -122,4 +116,4 @@ class Cache:
         return self.get_cache
 
     def is_empty(self):
-        return self.get_cache['tc'] == ''
+        return self.get_log_cache['tc'] == ''

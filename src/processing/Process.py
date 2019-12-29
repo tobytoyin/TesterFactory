@@ -54,13 +54,13 @@ class Process:
                 run_tc=self.tc, run_index=row['index'],
                 run_locator=row['locator'], run_path=row['path'], run_method=row['method'],
                 run_logic=row['logic'], run_key=row['key'], run_value=value,
-                validate_method=row['validate_method'], validate_value=validate_value,
+                validate_method=row['validate_method'],
+                validate_key=row['validate_key'], validate_value=validate_value,
                 validate_logic=row['validate_logic'])
 
             # compile inline-logic, add into DataInterface as dict()
             logic_dict = inline_arg_compile(str(row['logic']))
-            validate_logic_dict = inline_arg_compile(
-                str(row['validate_logic']))
+            validate_logic_dict = inline_arg_compile(str(row['validate_logic']))
             cache.data_any_load(
                 run_logic_fetch=logic_dict, validate_logic_fetch=validate_logic_dict)
 

@@ -15,14 +15,14 @@ class MainFrame:
     """
 
     def __init__(self, process, printout=True):
-        self.testing_reports = []
+        self.reports = []
         self.process = process
         self.printout = printout
 
     @property
-    def get_testing_reports(self):
+    def get_reports(self):
         "Retrieve the testing report of a single test case"
-        return self.testing_reports
+        return self.reports
 
     def start(self):
         "Start to execute a test case"
@@ -35,15 +35,15 @@ class MainFrame:
 
         ### process running ###
         while process_cur < process_max:
-            print(f"PTR @ {process_iter.i}==========")
+            print(f"PTR @ {process_cur}==========")
             assert process.web_status == 200
             # geterator a cache for passing data
             ptr = None
-            data_interface = next(process_iter)
+            cache = next(process_iter)
             # print(data_interface.get_blueprint_cache)
 
             # Block for TestExecution
-            test_exe = TestExecution(process.driver, data_interface)
+            test_exe = TestExecution(process.driver, cache)
             test_exe.execute_func(execute_for='run')
 
             # Debugging msg
@@ -51,7 +51,7 @@ class MainFrame:
             # print(data_interface.get_cache)
 
             # Block for ValidateExecution
-            valid_exe = ValidateExecution(process.driver, data_interface)
+            valid_exe = ValidateExecution(process.driver, cache)
             valid_exe.execute_func(execute_for='validate')
 
             # Debugging msg
@@ -59,11 +59,10 @@ class MainFrame:
             # print(data_interface.get_cache)
 
             # Block for manipulating iterator pointer
-            if 'jumpto' in data_interface.get_cache:
-                ptr = int(data_interface.get_cache['jumpto'])
-            elif 'skipby' in data_interface.get_cache:
-                ptr = process_iter.i + int(data_interface.get_cache['skipby'])
-                
+            if 'jumpto' in cache.get_cache:
+                ptr = int(cache.get_cache['jumpto'])
+            elif 'skipby' in cache.get_cache:
+                ptr = process_cur + int(cache.get_cache['skipby'])
             if ptr is not None:
                 self.process.pointer_change(value=ptr)
 
@@ -71,48 +70,19 @@ class MainFrame:
             if self.printout:
                 header_b = ('Blueprint fields', 'Values')
                 header_c = ('Cached fields', 'Values')
-                print_table(data_interface.get_log_cache, header=header_b, title='Results', style=('=', '-'))
-                print_table(data_interface.get_cache, header=header_c, title='Cache', style=('~', '-'))
+                print_table(cache.get_log_cache, header=header_b, title='Results', style=('=', '-'))
+                print_table(cache.get_cache, header=header_c, title='Cache', style=('~', '-'))
                 print('\n')
 
             # self._inline_logic_read(
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
-            del data_interface
+            if not cache.is_empty():
+                self.reports.append(cache.get_log_cache)
+            del cache
             process_cur = process_iter.i  # retreive current position
 
-            ### process terminated ###
-        # print(data_interface.get_testing_reports)
-
-    # def _inline_logic_read(self, test_exe, logic_list):
-    #     """
-    #     Read inline logic, e.g. --jumpto(Yes,3)
-    #     Arguments:
-    #     ------
-    #     `logic_list` (list of dict): list containing dictionaries with keys `['func', 'condition', 'output']`
-    #     """
-    #     # no inline-args to work on
-    #     if len(logic_list) == 0:
-    #         return None
-    #     for arg in logic_list:  # loop each dict
-    #         if arg['func'] == 'jumpto':
-    #             self._jumpto_logic(test_exe, arg)
-
-    # def _jumpto_logic(self, test_exe, arg):
-    #     element_exist = test_exe.element_exist
-    #     # print(element_exist)
-    #     # print(arg)
-    #     if (element_exist is None) & (arg['condition'] == 'No'):
-    #         self.process.pointer_change(
-    #             switch_method='jumpto', value=arg['input'])
-    #         print(f"pointer change to {self.process.i}")
-
-    #     elif (element_exist is not None) & (arg['condition'] == 'Yes'):
-    #         self.process.pointer_change(
-    #             switch_method='jumpto', value=arg['output'])
-    #         print(f"pointer change to {self.process.i}")
-    #     else:
-    #         pass
-    #         print("some error ")
+        ### process terminated ###
+        print(self.get_reports)
 
 
 class Error(Exception):
