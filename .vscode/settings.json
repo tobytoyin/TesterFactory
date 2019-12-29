@@ -4,7 +4,9 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cSpell.words": [
+        "iframe",
         "jumpto",
+        "skipby",
         "struct",
         "table"
     ]

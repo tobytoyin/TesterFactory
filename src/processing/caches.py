@@ -42,6 +42,7 @@ class Cache:
 
         ### Test Cache ###
         self._cache = {}
+        self._prev = {}
 
         # For assertion whether the test process pass or not?
         self._proceed = False
@@ -114,6 +115,10 @@ class Cache:
         for key, value in kwargs.items():
             self._cache[key] = value
         return self.get_cache
+    
+    def load_prev(self, prev):
+        self._prev.update(prev)
+        return None
 
     def is_empty(self):
         return self.get_log_cache['tc'] == ''

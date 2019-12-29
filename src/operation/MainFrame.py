@@ -14,8 +14,9 @@ class MainFrame:
     `process` (Process object)
     """
 
-    def __init__(self, process, printout=True):
+    def __init__(self, process, printout=False):
         self.reports = []
+        self.prev = {}
         self.process = process
         self.printout = printout
 
@@ -40,6 +41,8 @@ class MainFrame:
             # geterator a cache for passing data
             ptr = None
             cache = next(process_iter)
+            # load prev into cache
+            cache.load_prev(self.prev)
             # print(data_interface.get_blueprint_cache)
 
             # Block for TestExecution
@@ -78,6 +81,8 @@ class MainFrame:
             #     test_exe, data_interface.get_blueprint_data['run_logic'])
             if not cache.is_empty():
                 self.reports.append(cache.get_log_cache)
+            # store history
+            self.prev.update(cache.get_cache)
             del cache
             process_cur = process_iter.i  # retreive current position
 

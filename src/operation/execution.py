@@ -281,7 +281,7 @@ class TestExecution(Execution):
             self.element_exist = checkout_list
 
         ### run inline ###
-        if (any(k in ['jumpto', 'skipby'] for k in how)):
+        if any(k in ['jumpto', 'skipby'] for k in how):
             key = 'jumpto' if 'jumpto' in how else 'skipby'
             attr = self._logic_attr(key, 'all')
             gate = self.bp_cache['run_value'] if attr['condition'] == 'Key' else attr['condition']
@@ -331,6 +331,38 @@ class TestExecution(Execution):
         self._text_elements()
         if self.element_exist:
             self._button_clicker()
+
+    def counter(self):
+        """Counter on the looping"""
+        # trigger this counter
+        counter_name = f'counter_{self.bp_cache["run_index"]}'
+        prev = self._cache._prev
+        # check if this counter_name already exist in cache
+        new_counter = counter_name not in self._cache._prev
+        how = self._logic_setup(default='default')
+
+        # initialize counter value
+        if 'set' in how:
+            attr = self._logic_attr(logic_name='set', attr='all')
+            goto = attr['condition']
+            count = int(attr['input'])
+        elif 'default' in how:
+            goto = 0
+            count = 1
+
+        # action for new_counter
+        if new_counter:
+            count -= 1
+            self._cache.cache_add(**{counter_name: count}, jumpto=goto)
+        # action for existing counter
+        else:
+            # a completed counter -> skip
+            if int(prev[counter_name] == 0):
+                pass
+            # reduce count value
+            else:
+                count = int(prev[counter_name]) - 1
+                self._cache.cache_add(**{counter_name: count}, jumpto=goto)
 
     def date_picker(self):
         """Pick update from DATEPICKER using date format"""
