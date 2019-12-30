@@ -1,6 +1,6 @@
 from src.helper import inline_arg_compile, print_table
 from src.operation.execution import TestExecution, ValidateExecution
-from src.processing.Process import Process, test_data
+from src.processing.process import Process
 from datetime import datetime
 
 

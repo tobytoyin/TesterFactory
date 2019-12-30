@@ -19,7 +19,7 @@ def inline_arg_compile(args):
     condition1 = (args != '') & (args[0:2] == '--')  # correct syntax args
     condition2 = args in ['', 'nan']  # empty input
 
-    assert (condition1 | condition2), "Usage: '--func' or '--func(condition, input)' "
+    assert condition1 | condition2, "Usage: '--func' or '--func(condition, input)' "
     ### Syntax to compile ###
     syntax = r'--(?P<func>\w+)(\((?P<condition>\w*)(,\s?(?P<input>\w*))?\))?'
 
@@ -29,17 +29,14 @@ def inline_arg_compile(args):
     ### Reshape list to dict ###
     for item in match_list:
         func_name = item['func']
-        output[func_name] = {
-            'condition': item['condition'],
-            'input': item['input']
-        }
+        output[func_name] = {'condition': item['condition'], 'input': item['input']}
 
     return output
 
 
 def print_table(input_dict, title='', header=('Key', 'Value'), style=('', '-')):
     """Print the dict in a table form"""
-    assert (input_dict.__class__ is dict), "Only accept class='dict'"
+    assert input_dict.__class__ is dict, "Only accept class='dict'"
     if input_dict is None:
         return None
 
@@ -55,8 +52,8 @@ def print_table(input_dict, title='', header=('Key', 'Value'), style=('', '-')):
     width_full = width_left + width_right + 2 + 2 + 1
 
     # structure
-    table_struct = f"{{:<{width_left}}} | {{:<{width_right}}}"
-    
+    table_struct = f"{{:>{width_left}}} | {{:>{width_right}}}"
+
     # top border
     print(style[0] * width_full)
 
@@ -71,13 +68,13 @@ def print_table(input_dict, title='', header=('Key', 'Value'), style=('', '-')):
         # format empty value
         if val == '':
             val = '-'
-        
+
         # trim long string
         if len(str(val)) > max_string:
-            print(table_struct.format(key, str(val)[0: max_string]))
+            print(table_struct.format(key, str(val)[0:max_string]))
         else:
             print(table_struct.format(key, str(val)))
-        
+
     # bot boader
     print(style[0] * width_full)
     print("\n")

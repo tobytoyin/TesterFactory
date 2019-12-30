@@ -9,5 +9,6 @@
         "skipby",
         "struct",
         "table"
-    ]
+    ],
+    "python.linting.mypyEnabled": false
 }

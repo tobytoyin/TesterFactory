@@ -372,8 +372,7 @@ class TestExecution(Execution):
         if self.element_exist():
             locator, path, driver = self._locators()
             value = self.bp_cache['run_value']
-            js_template = 'document.{method}("{path}").value = "{value}";'.format(
-                path=path, value=value)
+            js_template = 'document.{method}("{path}").value = "{value}";'.format(path=path, value=value)
 
             # js get id
             if locator == 'id':

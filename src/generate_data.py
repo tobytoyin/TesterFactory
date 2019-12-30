@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+from src.job_assign import Boss
 
 
 class Factory:
@@ -19,7 +20,7 @@ class Factory:
         -----
         (workbook, sheetnames, core_sheet)
         """
-        assert (book_key != ''), "book_key cannot be empty"
+        assert book_key != '', "book_key cannot be empty"
         if self.setup[book_key]['path'][-1] != '/':
             path = f"{self.setup[book_key]['path']}/{self.setup[book_key]['fileName']}"
         else:
@@ -43,3 +44,6 @@ class Factory:
         wb, _, tg = self.book_and_sheets(book_key='caseMap')
         test_inputs = pd.read_excel(wb, tg, dtype=str).dropna(how='all')
         return test_inputs
+
+    # @property
+    # def boss(self):
