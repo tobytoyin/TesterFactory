@@ -11,6 +11,7 @@
   "caseMap": {
     "path": "resources/input",
     "fileName": "home.xlsx",
+    "blueprintTemplateCol": "",
     "sheetName": "Sheet1"
   }
 }

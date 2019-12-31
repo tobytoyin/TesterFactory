@@ -30,7 +30,10 @@ class MainFrame:
         return self.reports
 
     def start(self):
-        "Start to execute a test case"
+        """
+        Start to execute the test automation \n
+        output: A list of test result dicts
+        """
         ### initialize variables ###
         process = self.process
         process_iter = iter(process)
@@ -74,7 +77,10 @@ class MainFrame:
                     style=('=', '-'),
                 )
                 print_table(
-                    cache.get_cache, header=header_c, title='Cache', style=('~', '-')
+                    cache.get_cache,
+                    header=header_c,
+                    title='Cache Info',
+                    style=('~', '-'),
                 )
 
             if not cache.is_empty():
@@ -87,7 +93,7 @@ class MainFrame:
 
         ### process terminated ###
         process.driver.close()
-        return self.get_reports
+        return self.get_reports  # return a [dicts]
 
     def ptr_logic_gate(self, cache, process_cur):
         """Method for moving the ptr of the process iterator if needed"""
