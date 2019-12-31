@@ -1,30 +1,41 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from src.processing.caches import Cache
-from src.generate_data import Factory
 from src.helper import inline_arg_compile
 
 
 class Process:
-    def __init__(self, driver, test_input, flow_map):
+    def __init__(self, service_info, test_input, bp_map):
         """
-        Core processing for fetching data 
+        Core processing for fetching data. Per blueprint task
 
         Parameters:
         ------
-        `driver` (Selenium object): a selenium driver object; 
+        `setup_info`: an dictionary converted from application json
         `test_input` (single Factory object): an object to keep track of data;
-        `flow_map` (Factory object): an process map mapping all testing actions for selenium to operate;
+        `bp_map` (single Factory object): an process map mapping all testing actions for selenium to operate;
         """
-        self.driver = driver
+        self.service_info = service_info
         self.test_input = test_input
-        self.flow_map = flow_map
+        self.bp_map = bp_map
+        self.driver = self.create_driver()
 
         # define unique identity
         self.tc = self.test_input['test_id']
 
+    def create_driver(self):
+        """start a webdriver"""
+        options = Options()
+        for arg in self.service_info['options']:
+            options.add_argument(arg)
+        driver = webdriver.Chrome(
+            'resources/webdrivers/chromedriver.exe', options=options
+        )
+        return driver
+
     def __iter__(self):
         self.i = 0
-        self.n = len(self.flow_map)
+        self.n = len(self.bp_map)
         return self
 
     def __next__(self):
@@ -39,7 +50,7 @@ class Process:
 
         if i <= self.n:
             cache = Cache()
-            row = self.flow_map.loc[i]
+            row = self.bp_map.loc[i]
 
             ### handle data selection using key ###
             # special handling, skip

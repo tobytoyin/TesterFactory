@@ -4,7 +4,7 @@ from src.job_assign import Boss
 
 
 class Factory:
-    def __init__(self, path='C:/USers/tobyt/TestFactory/controller/controller.json'):
+    def __init__(self, path):
         """
         Factory is used to setup and load all needed data from spreadsheets
         """
@@ -31,13 +31,14 @@ class Factory:
         return wb, sh, tg
 
     @property
-    def flow_maps(self):
+    def bp_maps(self):
+        """bp_maps is a dictionary that allow test_case to fetch the blueprint that it needs"""
         wb, sh, _ = self.book_and_sheets(book_key='flowMap')
-        flow_maps = {}
+        bp_maps = {}
 
         for sheet in sh:
-            flow_maps[sheet] = pd.read_excel(wb, sheet)
-        return flow_maps
+            bp_maps[sheet] = pd.read_excel(wb, sheet)
+        return bp_maps
 
     @property
     def test_inputs(self):
@@ -45,5 +46,11 @@ class Factory:
         test_inputs = pd.read_excel(wb, tg, dtype=str).dropna(how='all')
         return test_inputs
 
-    # @property
-    # def boss(self):
+    @property
+    def assigned_tasks(self):
+        """assign workers"""
+        ### initialize ###
+        service = self.setup['service']
+        boss = Boss(self.test_inputs, service['workers'])
+        return boss.assign()
+

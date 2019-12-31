@@ -17,7 +17,7 @@ class TestBoss(unittest.TestCase):
             try:
                 boss = Boss(real_df, p)
             except AssertionError:
-                raise ValueError("Correct value got rejected")
+                raise ValueError("Correct value got rejected") 
 
 if __name__ == "__main__":
     unittest.main()

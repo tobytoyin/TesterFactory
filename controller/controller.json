@@ -1,7 +1,7 @@
 {
   "service": {
-    "workers": 5,
-    "options": []
+    "workers": 2,
+    "options": ["--start-maximized"]
   },
   "flowMap": {
     "path": "resources/core",
