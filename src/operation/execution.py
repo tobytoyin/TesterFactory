@@ -506,13 +506,14 @@ class TestExecution(Execution):
         element = self.element_exist
         element.send_keys(file_location)
 
-    def driver_wait(self):
+    def waiting(self):
         """Force webdriver to wait for n-seconds"""
         ### initiate ###
         val = self._logic_setup(default='default')
 
         if 'default' in val:
             sec = 5
+        # arg --for
         elif 'for' in val:
             sec = int(self._logic_attr(logic_name='for', attr='condition'))
         time.sleep(sec)

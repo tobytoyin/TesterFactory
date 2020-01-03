@@ -41,10 +41,10 @@ class Process:
     def __next__(self):
         """
         Move the pointer
-       Outputs:
-       ------
-       `caches`: A data cache for operation as well as report storage.
-       """
+        Outputs:
+        ------
+        `caches`: A data cache for operation as well as report storage.
+        """
         # pointer move in a step of flow_map
         i = self.i
 

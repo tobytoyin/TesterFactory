@@ -33,11 +33,11 @@ class Application:
             }
 
             # run this test with the above frag of data
-            mainframe = MainFrame(process_info=process_info, printout=False)
+            mainframe = MainFrame(process_info=process_info, printout=True)
             result[task_id] = mainframe.start()
             del mainframe
             task_id += 1
-            
+
         # append results into a dict with workers set
         print(f"{worker_id} is adding results")
         self.reports[str(worker_id)] = result
@@ -46,21 +46,21 @@ class Application:
     def initialize_tasks(self):
         assigned_tasks = self.factory.assigned_tasks  # contains all workers
         services = []
-        
+
         # launch parallel services
         for worker_id, tasks_all in assigned_tasks.items():
             process = Process(
-                target=self.inner_loop_for_worker,
-                args=(worker_id, tasks_all)
+                target=self.inner_loop_for_worker, args=(worker_id, tasks_all)
             )
             services.append(process)
             process.start()
-        
+
         # joining services
         for service in services:
             service.join()
 
         return None
+
 
 if __name__ == '__main__':
     a = Application()

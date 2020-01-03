@@ -79,7 +79,6 @@ def print_table(input_dict, title='', header=('Key', 'Value'), style=('', '-')):
     print(style[0] * width_full)
     print("\n")
 
-
 # print(inline_arg_compile('--match'))
 # print(inline_arg_compile('--match(5,hi)'))
 # print(inline_arg_compile('--match(1)'))
