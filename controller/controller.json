@@ -1,0 +1,17 @@
+{
+  "service": {
+    "workers": 2,
+    "options": ["--start-maximized"]
+  },
+  "flowMap": {
+    "path": "resources/core",
+    "fileName": "runflow.xlsx",
+    "sheetName": ""
+  },
+  "caseMap": {
+    "path": "resources/input",
+    "fileName": "home.xlsx",
+    "blueprintTemplateCol": "",
+    "sheetName": "Sheet1"
+  }
+}
