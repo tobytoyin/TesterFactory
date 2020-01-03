@@ -25,7 +25,7 @@ class Cache:
             'validate_logic': '',
             'validate_logic_fetch': '',
             'validate_key': '',
-            'validate_value': ''
+            'validate_value': '',
         }
 
         ### Data structure for runtime log ###
@@ -37,7 +37,8 @@ class Cache:
             'result': '',
             'validate_method': '',
             'error_msg': '',
-            'output': ''
+            'output': '',
+            'g': '',
         }
 
         ### Test Cache ###
@@ -68,8 +69,9 @@ class Cache:
         Only works when key exist in `Cache._bp_cache`
         """
         for key, value in kwargs.items():
-            assert (key in self._bp_cache.keys()
-                    ), "Key not in blueprint, use data_add_key() to add new key"
+            assert (
+                key in self._bp_cache.keys()
+            ), "Key not in blueprint, use data_add_key() to add new key"
             self._bp_cache[key] = str(value)
         return self.get_bp_cache
 
@@ -78,15 +80,16 @@ class Cache:
         Add any-like data to `Cache`.
         """
         for key, value in kwargs.items():
-            assert (key in self._bp_cache.keys()
-                    ), "Key not in blueprint, use data_add_key() to add new key"
+            assert (
+                key in self._bp_cache.keys()
+            ), "Key not in blueprint, use data_add_key() to add new key"
             self._bp_cache[key] = value
         return self.get_bp_cache
 
     def data_add_key(self, **args):
         """Add keys to `Cache`"""
         for new_key in args.items():
-            assert (new_key not in self._bp_cache.keys()), "Repeated Key"
+            assert new_key not in self._bp_cache.keys(), "Repeated Key"
             self._bp_cache[new_key] = ''
         return self.get_bp_cache
 
@@ -97,8 +100,7 @@ class Cache:
 
     def conditional_proceed(self, test_case=''):
         self.check_status = True
-        self.log_input(tc=test_case,
-                       result='PASS - conditional item is hidden')
+        self.log_input(tc=test_case, result='PASS - conditional item is hidden')
         return self
 
     def log_input(self, **kwargs):
@@ -107,7 +109,7 @@ class Cache:
             if key == 'tc':
                 self._log_cache[key] = value
             else:
-                self._log_cache[key] += f"{value}; "
+                self._log_cache[key] += f"{value}"
         return self.get_log_cache
 
     def cache_add(self, **kwargs):
@@ -115,7 +117,7 @@ class Cache:
         for key, value in kwargs.items():
             self._cache[key] = value
         return self.get_cache
-    
+
     def load_prev(self, prev):
         self._prev.update(prev)
         return None

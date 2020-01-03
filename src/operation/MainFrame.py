@@ -2,6 +2,7 @@ from src.helper import print_table
 from src.operation.execution import TestExecution, ValidateExecution
 from src.processing.process import Process
 from datetime import datetime
+from multiprocessing import Lock
 
 
 class MainFrame:
@@ -14,7 +15,7 @@ class MainFrame:
     `process_info` (A dictionary in a format)
     """
 
-    def __init__(self, process_info, printout=False):
+    def __init__(self, process_info, printout=False, printout_cache=False):
         self.reports = []
         self.prev = {}
         self.process = Process(
@@ -23,6 +24,7 @@ class MainFrame:
             process_info['bp_map'],
         )
         self.printout = printout
+        self.printout_cache = printout_cache
 
     @property
     def get_reports(self):
@@ -35,11 +37,13 @@ class MainFrame:
         output: A list of test result dicts
         """
         ### initialize variables ###
+        print_lock = Lock()
         process = self.process
         process_iter = iter(process)
         process_cur = process_iter.i
         process_max = process_iter.n
         t_start = datetime.now()
+        g = 0
 
         ### process running ###
         while process_cur < process_max:
@@ -48,6 +52,7 @@ class MainFrame:
             # geterator a cache for passing data
             cache = next(process_iter)
             # load prev into cache
+            cache.log_input(g=g)
             cache.load_prev(self.prev)
             # print(data_interface.get_blueprint_cache)
 
@@ -68,27 +73,33 @@ class MainFrame:
 
             # Debug print
             if self.printout:
+                print_lock.acquire()
                 header_b = ('Blueprint fields', 'Values')
-                header_c = ('Cached fields', 'Values')
                 print_table(
                     cache.get_log_cache,
                     header=header_b,
-                    title='Results',
+                    title=f'Results - {test_exe.tc}',
                     style=('=', '-'),
                 )
+                print_lock.release()
+            if self.printout_cache:
+                print_lock.acquire()
+                header_c = ('Cached fields', 'Values')
                 print_table(
                     cache.get_cache,
                     header=header_c,
-                    title='Cache Info',
+                    title=f'Cache Info - {valid_exe.tc}',
                     style=('~', '-'),
                 )
+                print_lock.release()
 
             if not cache.is_empty():
                 self.reports.append(cache.get_log_cache)
 
             # store history
+            g += 1
             self.prev.update(cache.get_cache)
-            del cache
+            del cache, valid_exe, test_exe
             process_cur = process_iter.i  # retreive current position
 
         ### process terminated ###
