@@ -1,17 +1,22 @@
 {
-  "service": {
-    "workers": 2,
-    "options": ["--start-maximized"]
-  },
-  "flowMap": {
-    "path": "resources/core",
-    "fileName": "runflow.xlsx",
-    "sheetName": ""
-  },
-  "caseMap": {
-    "path": "resources/input",
-    "fileName": "home.xlsx",
-    "blueprintTemplateCol": "",
-    "sheetName": "Sheet1"
-  }
+    "service": {
+        "workers": 2,
+        "options": ["--start-maximized", "--headless", "--log-level=3"]
+    },
+    "flowMap": {
+        "path": "resources/core",
+        "fileName": "runflow.xlsx",
+        "sheetName": ""
+    },
+    "caseMap": {
+        "path": "resources/input",
+        "fileName": "home.xlsx",
+        "blueprintTemplateCol": "",
+        "sheetName": "Sheet1"
+    },
+    "output": {
+        "path": "output",
+        "fileName": "test_output.csv",
+        "summaryName": "test_summary.csv"
+    }
 }

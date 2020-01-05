@@ -15,7 +15,7 @@ class MainFrame:
     `process_info` (A dictionary in a format)
     """
 
-    def __init__(self, process_info, printout=False, printout_cache=False):
+    def __init__(self, process_info, printout, printout_cache):
         self.reports = []
         self.prev = {}
         self.process = Process(
