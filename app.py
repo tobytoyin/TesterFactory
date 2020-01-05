@@ -1,39 +1,55 @@
 from src.job_setup import Factory
 from src.operation.mainframe import MainFrame
 from multiprocessing import Process, Manager
+import pandas as pd
+from src.helper import print_table
 
 
 class Application:
     """Application is the Framework"""
 
-    def __init__(self, path="C:/Users/tobyt/TestFactory/controller/controller.json"):
-        self.factory = Factory(path=path)
+    def __init__(self, app_path="C:/Users/tobyt/TestFactory", **kwargs):
+        self.app_path = app_path
+        self.factory = Factory(path=f'{app_path}/controller/controller.json')
         self.reports = Manager().dict()
-
-    def report_judgement(self):
-        """Based on the results, finalized whether a cases is pass or not"""
-        # if not all Pass, then Fail
-        pass
+        self.data = self.factory.setup
+        # others
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def inner_loop_for_worker(self, worker_id, worker_tasks_all):
         """Loop the test case inside a worker"""
         # default template column if needed
-        template_col = self.factory.setup['caseMap']['blueprintTemplateCol']
+        template_col = self.data['caseMap']['blueprintTemplateCol']
         template_col = 'template' if template_col == '' else template_col
         result = {}
+
+        # arguments for mainframe
+        try:
+            printout = bool(self.printout)
+        except AttributeError:
+            printout = False
+        try:
+            printout_cache = bool(self.printout_cache)
+        except AttributeError:
+            printout_cache = False
 
         task_id = 1
         for _, job_to_do in worker_tasks_all.iterrows():
             # process info have i-th row test case
             template_to_fetch = job_to_do[template_col]
             process_info = {
-                'service_info': self.factory.setup['service'],
+                'service_info': self.data['service'],
                 'test_input': job_to_do,
                 'bp_map': self.factory.bp_maps[template_to_fetch],
             }
 
             # run this test with the above frag of data
-            mainframe = MainFrame(process_info=process_info, printout=True)
+            mainframe = MainFrame(
+                process_info=process_info,
+                printout=printout,
+                printout_cache=printout_cache,
+            )
             result[task_id] = mainframe.start()
             del mainframe
             task_id += 1
@@ -59,10 +75,69 @@ class Application:
         for service in services:
             service.join()
 
+    def test_tasks(self):
+        assigned_tasks = self.factory.assigned_tasks  # contains all workers
+        services = []
+        for worker_id, tasks_all in assigned_tasks.items():
+            report = self.inner_loop_for_worker(worker_id, tasks_all)
+            services.append(report)
+
+    def create_csv(self):
+        ### function to use in df before exporting csv
+        def _report_judgement():
+            """Based on the results, finalized whether a cases is pass or not"""
+            # if not all Pass, then Fail
+            tc_unique = df['tc'].unique()
+            print(tc_unique)
+            out_li = []
+
+            # Loop every unique workers result and judge the case
+            for tc_to_judge in tc_unique:
+                tem = df.loc[df['tc'] == tc_to_judge]
+                final_result = 'Fail' if 'Fail' in tem['result'].values else 'Pass'
+
+                # input to result
+                out = {
+                    'worker_id': tem['worker_id'].unique()[0],
+                    'worker_task_id': tem['worker_task_id'].unique()[0],
+                    'tc': tc_to_judge,
+                    'map_index': 'END',
+                    'result': final_result,
+                    'g': 'END',
+                }
+                print_table(out, title=f"Final result of {tc_to_judge}")
+                out_li.append(out)
+                del out, tem, final_result
+
+            summary = df.append(out_li, ignore_index=True)
+            return summary
+
+        validation_series_li = []  # for create dataframe
+
+        # First layer loop {'worker_n': tasks}
+        for worker_id, tasks in self.reports.items():
+            # Second layer loop {'task_id': list of validation}
+            for task_id, validation_list in tasks.items():
+                # Third layer loop: [list of validation]
+                for validation_item in validation_list:
+                    tem = pd.Series({'worker_id': worker_id, 'worker_task_id': task_id})
+                    tem = tem.append(pd.Series(validation_item))
+                    validation_series_li.append(tem)
+                    del tem
+
+        ### Final reporting format ###
+        path = self.data['output']['path']
+        filename = self.data['output']['fileName']
+        summaryname = self.data['output']['summaryName']
+
+        df = pd.DataFrame(validation_series_li)
+        df.to_csv(f'{self.app_path}/{path}/{filename}')
+        summary = _report_judgement()
+        summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
         return None
 
 
 if __name__ == '__main__':
     a = Application()
     a.initialize_tasks()
-    print(a.reports)
+    a.create_csv()

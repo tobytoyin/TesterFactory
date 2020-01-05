@@ -27,7 +27,7 @@ class Boss:
             test_cases.__class__ is pd.DataFrame
         ), "test_cases needs to be a DataFrame"
 
-        test_cases['result'] = None
+        # test_cases['result'] = None
         return test_cases
 
     def assign(self):
