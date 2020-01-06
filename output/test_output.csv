@@ -1,34 +1,9 @@
 ,worker_id,worker_task_id,tc,map_index,expect,actual,result,validate_method,error_msg,output,g
 0,worker_1,1,tc_001,1,exist_yes EXIST=Yes,exist_yes EXIST=True,Pass,checkout-validation BY:['exist'],,,1
 1,worker_1,1,tc_001,2,exist_no EXIST=No,exist_no EXIST=False,Fail,checkout-validation BY:['exist'],,,2
-2,worker_1,1,tc_001,3,not_exist_yes EXIST=Yes,not_exist_yes EXIST=False,Fail,checkout-validation BY:['exist'],,,3
-3,worker_1,1,tc_001,4,not_exist_no EXIST=No,not_exist_no EXIST=True,Pass,checkout-validation BY:['exist'],,,4
-4,worker_1,2,tc_002,2,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Pass,,,,2
-5,worker_1,2,tc_002,3,Redirect (['strict']) to 'https://www.w3schools.com/html/default.html',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Fail,,,,3
-6,worker_1,2,tc_002,4,Redirect (['contain']) to 'default',Redirect (['contain']) to 'https://www.w3schools.com/html/default.asp',Pass,,,,4
-7,worker_1,2,tc_002,5,Redirect (['contain']) to 'wrong-words',Redirect (['contain']) to 'https://www.w3schools.com/html/default.asp',Fail,,,,5
-8,worker_2,1,tc_003,1,"""HTML"" IS  IN SCRAPPED TEXT","""HTML"" IS  IN ""HTML""",Fail,text-validation BY:['strict'],,TEXT<header>:HTML,1
-9,worker_2,1,tc_003,2,"""AMPO"" IS  IN SCRAPPED TEXT","""AMPO"" IS  IN ""HTML""",Fail,text-validation BY:['strict'],,TEXT<header>:HTML,2
-10,worker_2,1,tc_003,3,"""HT"" IS  IN SCRAPPED TEXT","""HT"" IS  IN ""HTML""",Fail,text-validation BY:['loose'],,TEXT<header>:HTML,3
-11,worker_2,1,tc_003,4,"""PPP"" IS  IN SCRAPPED TEXT","""PPP"" IS  IN ""HTML""",Fail,text-validation BY:['loose'],,TEXT<header>:HTML,4
-12,worker_2,1,tc_003,5,"""STOP CSAS"" IS NOT IN SCRAPPED TEXT","""STOP CSAS"" IS NOT IN ""LEARN HTML HTML REFERENCE""",Pass,"text-validation BY:['loose', 'without']",,TEXT<button1>:LEARN HTML|HTML REFERENCE,5
-13,worker_2,1,tc_003,6,"""LEARN HT"" IS NOT IN SCRAPPED TEXT","""LEARN HT"" IS  IN ""LEARN HTML HTML REFERENCE""",Fail,"text-validation BY:['loose', 'without']",,TEXT<button1>:LEARN HTML|HTML REFERENCE,6
-14,worker_2,1,tc_003,7,"""LEARN HTML & HTML REFERENCE"" IS NOT IN SCRAPPED TEXT","""LEARN HTML & HTML REFERENCE"" IS NOT IN ""LEARN HTML HTML REFERENCE""",Pass,text-validation BY:['without'],,TEXT<button1>:LEARN HTML|HTML REFERENCE,7
-15,worker_2,1,tc_003,8,"""LEARN HTML HTML REFERENCE"" IS NOT IN SCRAPPED TEXT","""LEARN HTML HTML REFERENCE"" IS  IN ""LEARN HTML HTML REFERENCE""",Fail,text-validation BY:['without'],,TEXT<button1>:LEARN HTML|HTML REFERENCE,8
-16,worker_2,1,tc_003,,,,,,,TEXT:The language for building web pages,9
-17,worker_2,1,tc_003,,,,,,,TEXT:,10
-18,worker_2,1,tc_003,11,"""AMPO"" IS  IN SCRAPPED TEXT","""AMPO"" IS  IN """"",Fail,text-validation BY:['strict'],,TEXT:,11
-19,worker_2,1,tc_003,12,"""HTML"" IS NOT IN SCRAPPED TEXT","""HTML"" IS NOT IN """"",Pass,text-validation BY:['without'],,TEXT:,12
-20,worker_2,2,tc_004,1,btn EXIST=Yes,btn EXIST=True,Pass,checkout-validation BY:['exist'],,,1
-21,worker_2,2,tc_004,2,enable-btn ENABLE=Yes,enable-btn ENABLE=False,Fail,checkout-validation BY:['enable'],,,2
-22,worker_2,2,tc_004,3,disable-btn ENABLE=No,disable-btn ENABLE=True,Pass,checkout-validation BY:['enable'],,,3
-23,worker_2,2,tc_004,4,enable-btn ENABLE=Yes,enable-btn ENABLE=True,Pass,checkout-validation BY:['enable'],,,4
-24,worker_2,2,tc_004,5,disable-btn ENABLE=No,disable-btn ENABLE=False,Fail,checkout-validation BY:['enable'],,,5
-25,worker_2,2,tc_004,6,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,6
-26,worker_2,3,tc_005,16,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,15
-27,worker_2,3,tc_005,16,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,28
-28,worker_1,1,tc_001,END,,,Fail,,,,END
-29,worker_1,2,tc_002,END,,,Fail,,,,END
-30,worker_2,1,tc_003,END,,,Fail,,,,END
-31,worker_2,2,tc_004,END,,,Fail,,,,END
-32,worker_2,3,tc_005,END,,,Fail,,,,END
+2,worker_1,2,tc_002,2,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Pass,,,,2
+3,worker_1,2,tc_002,3,Redirect (['strict']) to 'https://www.w3schools.com/html/default.html',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Fail,,,,3
+4,worker_2,1,tc_003,1,"""HTML"" IS  IN SCRAPPED TEXT","""HTML"" IS  IN ""HTML""",Fail,text-validation BY:['strict'],,TEXT<header>:HTML,1
+5,worker_2,2,tc_004,1,btn EXIST=Yes,btn EXIST=True,Pass,checkout-validation BY:['exist'],,,1
+6,worker_2,2,tc_004,2,enable-btn ENABLE=Yes,enable-btn ENABLE=False,Fail,checkout-validation BY:['enable'],,,2
+7,worker_2,3,tc_005,16,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,15

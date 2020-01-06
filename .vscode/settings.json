@@ -10,5 +10,6 @@
         "struct",
         "table"
     ],
-    "python.linting.mypyEnabled": false
+    "python.linting.mypyEnabled": false,
+    "python.formatting.provider": "black"
 }

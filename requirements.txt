@@ -1,5 +1,4 @@
 pandas
-xlrd
 selenium
 pillow
 bs4

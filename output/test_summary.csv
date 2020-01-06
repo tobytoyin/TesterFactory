@@ -1,0 +1,6 @@
+,worker_id,worker_task_id,tc,map_index,result,g
+0,worker_1,1,tc_001,END,Fail,END
+1,worker_1,2,tc_002,END,Fail,END
+2,worker_2,1,tc_003,END,Fail,END
+3,worker_2,2,tc_004,END,Fail,END
+4,worker_2,3,tc_005,END,Fail,END

@@ -8,7 +8,7 @@ from src.helper import print_table
 class Application:
     """Application is the Framework"""
 
-    def __init__(self, app_path="C:/Users/tobyt/TestFactory", **kwargs):
+    def __init__(self, app_path="C:/Users/tobyt/Projects/TestFactory", **kwargs):
         self.app_path = app_path
         self.factory = Factory(path=f'{app_path}/controller/controller.json')
         self.reports = Manager().dict()
@@ -33,6 +33,10 @@ class Application:
             printout_cache = bool(self.printout_cache)
         except AttributeError:
             printout_cache = False
+        try:
+            stop_when_fail = bool(self.stop_when_fail)
+        except AttributeError:
+            stop_when_fail = True
 
         task_id = 1
         for _, job_to_do in worker_tasks_all.iterrows():
@@ -49,6 +53,7 @@ class Application:
                 process_info=process_info,
                 printout=printout,
                 printout_cache=printout_cache,
+                stop_when_fail=stop_when_fail,
             )
             result[task_id] = mainframe.start()
             del mainframe
@@ -106,10 +111,12 @@ class Application:
                     'g': 'END',
                 }
                 print_table(out, title=f"Final result of {tc_to_judge}")
+
                 out_li.append(out)
                 del out, tem, final_result
 
-            summary = df.append(out_li, ignore_index=True)
+            # summary = df.append(out_li, ignore_index=True)
+            summary = pd.DataFrame(out_li)
             return summary
 
         validation_series_li = []  # for create dataframe
@@ -129,8 +136,9 @@ class Application:
         path = self.data['output']['path']
         filename = self.data['output']['fileName']
         summaryname = self.data['output']['summaryName']
+        col_names = list(validation_series_li[0].keys())
 
-        df = pd.DataFrame(validation_series_li)
+        df = pd.DataFrame(validation_series_li, columns=col_names)
         df.to_csv(f'{self.app_path}/{path}/{filename}')
         summary = _report_judgement()
         summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
@@ -138,6 +146,6 @@ class Application:
 
 
 if __name__ == '__main__':
-    a = Application()
+    a = Application(printout=True)
     a.initialize_tasks()
     a.create_csv()

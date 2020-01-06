@@ -2,10 +2,12 @@ from src.helper import inline_arg_compile
 from src.util_driver import full_screenshot
 import time
 import re
-# driver = webdriver.Chrome()
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import ElementClickInterceptedException, ElementNotInteractableException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from bs4 import BeautifulSoup
@@ -39,7 +41,6 @@ class Execution:
         # Values that commonly used
         self.tc = self.bp_cache['run_tc']  # test case id
         self.element_exist = None  # determine whether a web-element exist or not
-        # self.logics = inline_arg_compile(self.bp_cache['run_logic'])
 
     ##### FUNCTIONS THAT VARY BY CHILD_CLASS #####
     def _logic_setup(self, default=''):
@@ -47,10 +48,10 @@ class Execution:
         assert default != '', "args--default requires a value"
 
         # from child TestExecution
-        if self.__class__ is TestExecution:
+        if isinstance(self, TestExecution):
             logic_list = self.run_logic_list
         # from child ValidateExecution
-        elif self.__class__ is ValidateExecution:
+        elif isinstance(self, ValidateExecution):
             logic_list = self.validate_logic_list
 
         # if the logic list is empty, add the default value in list.
@@ -70,13 +71,13 @@ class Execution:
         assert logic_name != '', "'logic_name' must not be empty for retrieval"
 
         # from child TestExecution
-        if self.__class__ is TestExecution:
+        if isinstance(self, TestExecution):
             if attr == 'all':
                 return self.run_args[logic_name]
             else:
                 return self.run_args[logic_name][attr]
         # from child ValidateExecution
-        elif self.__class__ is ValidateExecution:
+        elif isinstance(self, ValidateExecution):
             if attr == 'all':
                 return self.validate_args[logic_name]
             else:
@@ -85,7 +86,10 @@ class Execution:
     ##### EXECUTION FUNCTION #####
     def execute_func(self, execute_for='run'):
         """Trigger function through string in the blueprint"""
-        assert execute_for in {'run', 'validate'}, "Usage: execute_for in {'run', 'validate'}"
+        assert execute_for in {
+            'run',
+            'validate',
+        }, "Usage: execute_for in {'run', 'validate'}"
         # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
         if str(self.bp_cache[key]) == 'nan':
@@ -543,6 +547,10 @@ class ValidateExecution(Execution):
         """Retrieve inline args and inputs for validation"""
         return self.bp_cache['validate_logic_fetch']
 
+    @property
+    def validate_require(self):
+        return self.bp_cache['validate_method'] != 'nan'
+
     def is_good(self):
         """The case is good and pass the testing"""
         self.terminate = False
@@ -681,8 +689,6 @@ class ValidateExecution(Execution):
 
         if tp:
             self.is_good()
-        else:
-            pass
 
         ### Log result ###
         self._cache.log_input(
