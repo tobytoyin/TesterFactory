@@ -1,9 +1,10 @@
-,worker_id,worker_task_id,tc,map_index,expect,actual,result,validate_method,error_msg,output,g
-0,worker_1,1,tc_001,1,exist_yes EXIST=Yes,exist_yes EXIST=True,Pass,checkout-validation BY:['exist'],,,1
-1,worker_1,1,tc_001,2,exist_no EXIST=No,exist_no EXIST=False,Fail,checkout-validation BY:['exist'],,,2
-2,worker_1,2,tc_002,2,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Pass,,,,2
-3,worker_1,2,tc_002,3,Redirect (['strict']) to 'https://www.w3schools.com/html/default.html',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Fail,,,,3
-4,worker_2,1,tc_003,1,"""HTML"" IS  IN SCRAPPED TEXT","""HTML"" IS  IN ""HTML""",Fail,text-validation BY:['strict'],,TEXT<header>:HTML,1
-5,worker_2,2,tc_004,1,btn EXIST=Yes,btn EXIST=True,Pass,checkout-validation BY:['exist'],,,1
-6,worker_2,2,tc_004,2,enable-btn ENABLE=Yes,enable-btn ENABLE=False,Fail,checkout-validation BY:['enable'],,,2
-7,worker_2,3,tc_005,16,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,15
+,worker_id,worker_task_id,tc,map_index,expect,actual,result,validate_method,error_msg,output,g,add_remarks,add_ticket
+0,worker_1,1,tc_001,1,exist_yes EXIST=Yes,exist_yes EXIST=True,Pass,checkout-validation BY:['exist'],,,1,Testing for checkout & checkout_validate,123123
+1,worker_1,1,tc_001,2,exist_no EXIST=No,exist_no EXIST=False,Fail,checkout-validation BY:['exist'],,,2,Testing for checkout & checkout_validate,123123
+2,worker_1,2,tc_002,2,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Pass,,,,2,Testing for click_button & redirect_validate,4123123
+3,worker_1,2,tc_002,3,Redirect (['strict']) to 'https://www.w3schools.com/html/default.html',Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',Fail,,,,3,Testing for click_button & redirect_validate,4123123
+4,worker_2,1,tc_003,1,"""HTML"" IS  IN SCRAPPED TEXT","""HTML"" IS  IN ""HTML""",Pass,text-validation BY:['with'],,TEXT<header>:HTML,1,Testing for click_button & redirect_validate,124512
+5,worker_2,1,tc_003,2,"""AMPO"" IS  IN SCRAPPED TEXT","""AMPO"" IS NOT IN ""HTML""",Fail,text-validation BY:['with'],,TEXT<header>:HTML,2,Testing for click_button & redirect_validate,124512
+6,worker_2,2,tc_004,1,btn EXIST=Yes,btn EXIST=True,Pass,checkout-validation BY:['exist'],,,1,Testing for whether disable functions works,32313
+7,worker_2,2,tc_004,2,enable-btn ENABLE=Yes,enable-btn ENABLE=False,Fail,checkout-validation BY:['enable'],,,2,Testing for whether disable functions works,32313
+8,worker_2,3,tc_005,16,disable-btn ENABLE=No,disable-btn ENABLE=None,Fail,checkout-validation BY:['enable'],,,15,Testing for jumpto,2341243

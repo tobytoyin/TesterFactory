@@ -35,7 +35,7 @@ class Boss:
         Assign workers to the tasks
         return: 
         -----
-        An assigned workers dictionary: {workers_i: task list}
+        An assigned workers dictionary: {worker_i: task list}
         """
         ### initialize dict ###
         workers = {}
@@ -51,6 +51,6 @@ class Boss:
             else:
                 workers['worker_' + str(i)] = self.test_cases[cur : cur + task_num]
                 cur += task_num
-            print(f">> workers_{i} gets a job...")
+            print(f">> worker_{i} gets a job...")
         return workers
 

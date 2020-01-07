@@ -1,6 +1,6 @@
-,worker_id,worker_task_id,tc,map_index,result,g
-0,worker_1,1,tc_001,END,Fail,END
-1,worker_1,2,tc_002,END,Fail,END
-2,worker_2,1,tc_003,END,Fail,END
-3,worker_2,2,tc_004,END,Fail,END
-4,worker_2,3,tc_005,END,Fail,END
+,tc,map_index,result,g,actual,error_msg,output,worker_id,worker_task_id,expect,validate_method,add_remarks,add_ticket
+0,tc_001,END,Fail,END,exist_yes EXIST=True,,,worker_1,1,exist_yes EXIST=Yes,checkout-validation BY:['exist'],Testing for checkout & checkout_validate,123123
+1,tc_002,END,Fail,END,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',,,worker_1,2,Redirect (['strict']) to 'https://www.w3schools.com/html/default.asp',,Testing for click_button & redirect_validate,4123123
+2,tc_003,END,Fail,END,"""HTML"" IS  IN ""HTML""",,TEXT<header>:HTML,worker_2,1,"""HTML"" IS  IN SCRAPPED TEXT",text-validation BY:['with'],Testing for click_button & redirect_validate,124512
+3,tc_004,END,Fail,END,btn EXIST=True,,,worker_2,2,btn EXIST=Yes,checkout-validation BY:['exist'],Testing for whether disable functions works,32313
+4,tc_005,END,Fail,END,disable-btn ENABLE=None,,,worker_2,3,disable-btn ENABLE=No,checkout-validation BY:['enable'],Testing for jumpto,2341243

@@ -2,3 +2,5 @@ pandas
 selenium
 pillow
 bs4
+Requests
+xlrd

@@ -5,7 +5,7 @@ from src.helper import inline_arg_compile
 
 
 class Process:
-    def __init__(self, service_info, test_input, bp_map):
+    def __init__(self, setup, test_input, bp_map):
         """
         Core processing for fetching data. Per blueprint task
 
@@ -15,13 +15,12 @@ class Process:
         `test_input` (single Factory object): an object to keep track of data;
         `bp_map` (single Factory object): an process map mapping all testing actions for selenium to operate;
         """
-        self.service_info = service_info
+        self.service_info = setup['service']
+        self.additional_col = setup['caseMap']['additionalInputCol']
         self.test_input = test_input
         self.bp_map = bp_map
         self.driver = self.create_driver()
-
-        # define unique identity
-        self.tc = self.test_input['test_id']
+        self.tc = self.test_input['test_id']  # define unique identity
 
     def create_driver(self):
         """start a webdriver"""
@@ -51,6 +50,7 @@ class Process:
         if i <= self.n:
             cache = Cache()
             row = self.bp_map.loc[i]
+            test_input = self.test_input
 
             ### handle data selection using key ###
             # special handling, skip
@@ -59,8 +59,8 @@ class Process:
                 str(row['validate_key']) == 'nan' or row['validate_key'][0] == '%'
             )
 
-            value = 'nan' if pass_key else self.test_input[row['key']]
-            validate_value = 'nan' if pass_val else self.test_input[row['validate_key']]
+            value = 'nan' if pass_key else test_input[row['key']]
+            validate_value = 'nan' if pass_val else test_input[row['validate_key']]
 
             # update data into DataInterface of current pointing row
             cache.data_str_load(
@@ -77,6 +77,10 @@ class Process:
                 validate_value=validate_value,
                 validate_logic=row['validate_logic'],
             )
+            ### Load additional Fields ###
+            if self.additional_col:
+                for add_col in self.additional_col:
+                    cache.data_str_load(**{f"add_{add_col}": test_input[add_col]})
 
             # compile inline-logic, add into DataInterface as dict()
             logic_dict = inline_arg_compile(str(row['logic']))
@@ -108,23 +112,5 @@ class Process:
             })();
         '''
         return self.driver.execute_script(js_command)
-
-
-# f = Factory()
-# case = 4
-# t = f.test_inputs
-# template = t['template'][case]
-# a = f.flow_maps[template]
-# driver = webdriver.Chrome('resources/webdrivers/chromedriver.exe')
-# p = Process(driver, t.loc[case], a)
-# # it = iter(p)
-# # n = next(it)
-
-# test_data = {
-#     'driver': driver,
-#     'f': f,
-#     'flow_maps': a,
-#     'test_inputs': t,
-#     'process': p
-#     # 'cache': n
-# }
+        # url = self.driver.current_url
+        # return requests.get(url).status_code

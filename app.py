@@ -42,9 +42,10 @@ class Application:
         for _, job_to_do in worker_tasks_all.iterrows():
             # process info have i-th row test case
             template_to_fetch = job_to_do[template_col]
+
             process_info = {
-                'service_info': self.data['service'],
-                'test_input': job_to_do,
+                'setup': self.data,  # is the json setup
+                'test_input': job_to_do,  # is the test load
                 'bp_map': self.factory.bp_maps[template_to_fetch],
             }
 
@@ -103,13 +104,16 @@ class Application:
 
                 # input to result
                 out = {
-                    'worker_id': tem['worker_id'].unique()[0],
-                    'worker_task_id': tem['worker_task_id'].unique()[0],
                     'tc': tc_to_judge,
                     'map_index': 'END',
                     'result': final_result,
                     'g': 'END',
                 }
+                # add other fields
+                diff = set(tem).difference(set(out))
+                for d in diff:
+                    out[d] = tem[d].unique()[0]
+
                 print_table(out, title=f"Final result of {tc_to_judge}")
 
                 out_li.append(out)
@@ -146,6 +150,6 @@ class Application:
 
 
 if __name__ == '__main__':
-    a = Application(printout=True)
+    a = Application(printout=False)
     a.initialize_tasks()
     a.create_csv()

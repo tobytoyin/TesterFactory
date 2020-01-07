@@ -1,6 +1,8 @@
 {
     "service": {
+        // defines the number of workers to run cases
         "workers": 2,
+        // define additional arguments for web-driver
         "options": ["--start-maximized", "--headless", "--log-level=3"]
     },
     "flowMap": {
@@ -12,7 +14,10 @@
         "path": "resources/input",
         "fileName": "home.xlsx",
         "blueprintTemplateCol": "",
-        "sheetName": "Sheet1"
+        // "sheetName" defines the sheet to open
+        "sheetName": "Sheet1",
+        // "additionalInputCol" defines additional columns to add into reports that are not included in the framework.
+        "additionalInputCol": ["remarks", "ticket"]
     },
     "output": {
         "path": "output",

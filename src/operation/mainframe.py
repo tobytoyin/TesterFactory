@@ -1,5 +1,6 @@
 from src.helper import print_table
-from src.operation.execution import ValidateExecution, TestExecution
+from src.operation.exec_valid import ValidateExecution
+from src.operation.exec_test import TestExecution
 from src.processing.process import Process
 from datetime import datetime
 from multiprocessing import Lock
@@ -24,9 +25,9 @@ class MainFrame:
         self.reports = []
         self.prev = {}
         self.process = Process(
-            process_info['service_info'],
-            process_info['test_input'],
-            process_info['bp_map'],
+            setup=process_info['setup'],
+            test_input=process_info['test_input'],
+            bp_map=process_info['bp_map'],
         )
 
     @property
@@ -86,6 +87,7 @@ class MainFrame:
                     style=('=', '-'),
                 )
                 print_lock.release()
+
             if self.args['printout_cache']:
                 print_lock.acquire()
                 header_c = ('Cached fields', 'Values')
