@@ -1,23 +1,24 @@
 {
     "service": {
-        // defines the number of workers to run cases
+        "_comment_workers": "defines the number of workers to run cases",
         "workers": 2,
-        // define additional arguments for web-driver
-        "options": ["--start-maximized", "--headless", "--log-level=3"]
+        "_comment_options": "define additional arguments for web-driver",
+        "options": ["--start-maximized", "--log-level=3"]
     },
     "flowMap": {
         "path": "resources/core",
         "fileName": "runflow.xlsx",
-        "sheetName": ""
+        "_comment_componentMasterSheetName": "defines the sheet that hold all master web-element which can be reuse in multiple cases.",
+        "componentMasterSheetName": ""
     },
     "caseMap": {
         "path": "resources/input",
-        "fileName": "home.xlsx",
+        "fileName": "sme_test.xlsx",
         "blueprintTemplateCol": "",
-        // "sheetName" defines the sheet to open
-        "sheetName": "Sheet1",
-        // "additionalInputCol" defines additional columns to add into reports that are not included in the framework.
-        "additionalInputCol": ["remarks", "ticket"]
+        "_comment_sheetName": "defines the sheet to open",
+        "sheetName": "test",
+        "_comment_additionalInputCol": "defines additional columns to add into reports that are not included in the framework.",
+        "additionalInputCol": ["remarks"]
     },
     "output": {
         "path": "output",

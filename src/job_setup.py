@@ -20,6 +20,13 @@ class Factory:
         -----
         (workbook, sheetnames, core_sheet)
         """
+
+        def _json_get_sheet():
+            if book_key == 'flowMap':
+                return 'componentMasterSheetName'
+            elif book_key == 'caseMap':
+                return 'sheetName'
+
         assert book_key != '', "book_key cannot be empty"
         if self.setup[book_key]['path'][-1] != '/':
             path = f"{self.setup[book_key]['path']}/{self.setup[book_key]['fileName']}"
@@ -27,7 +34,7 @@ class Factory:
             path = f"{self.setup[book_key]['path']}{self.setup[book_key]['fileName']}"
         wb = pd.ExcelFile(path)
         sh = wb.sheet_names
-        tg = self.setup[book_key]['sheetName']
+        tg = self.setup[book_key][_json_get_sheet()]
         return wb, sh, tg
 
     @property

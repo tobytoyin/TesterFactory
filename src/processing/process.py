@@ -58,7 +58,9 @@ class Process:
             pass_val = (
                 str(row['validate_key']) == 'nan' or row['validate_key'][0] == '%'
             )
+            # locator is calling master component sheet
 
+            # Framework treat 'nan' as skip case
             value = 'nan' if pass_key else test_input[row['key']]
             validate_value = 'nan' if pass_val else test_input[row['validate_key']]
 

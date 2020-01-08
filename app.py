@@ -137,16 +137,21 @@ class Application:
                     del tem
 
         ### Final reporting format ###
-        path = self.data['output']['path']
-        filename = self.data['output']['fileName']
-        summaryname = self.data['output']['summaryName']
-        col_names = list(validation_series_li[0].keys())
+        try:
+            path = self.data['output']['path']
+            filename = self.data['output']['fileName']
+            summaryname = self.data['output']['summaryName']
+            col_names = list(validation_series_li[0].keys())
 
-        df = pd.DataFrame(validation_series_li, columns=col_names)
-        df.to_csv(f'{self.app_path}/{path}/{filename}')
-        summary = _report_judgement()
-        summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
-        return None
+            df = pd.DataFrame(validation_series_li, columns=col_names)
+            df.to_csv(f'{self.app_path}/{path}/{filename}')
+            summary = _report_judgement()
+            summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
+            return None
+        # empty list
+        # TODO how to handle input with not validation
+        except KeyError:
+            return None
 
 
 if __name__ == '__main__':

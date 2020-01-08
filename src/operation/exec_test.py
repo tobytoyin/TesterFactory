@@ -52,9 +52,9 @@ class TestExecution(Execution):
         value = self.bp_cache['run_value'].lower()
         choice = 0  # if entry don't have choice, assume to select first element
 
-        if value == 'false':
+        if value in ['false', 'no']:
             choice = int(1)
-        elif value not in ['nan', 'true']:
+        elif value not in ['nan', 'true', 'yes']:
             choice = int(value)  # specific element index
 
         try:
@@ -110,7 +110,7 @@ class TestExecution(Execution):
             assert element is not None
             element.click()  # ordinary clicking
         # handle shadow button
-        except ElementClickInterceptedException:
+        except (ElementClickInterceptedException, ElementNotInteractableException):
             js_command = 'arguments[0].click();'
             driver.execute_script(js_command, element)
         except ElementNotInteractableException:
@@ -180,8 +180,8 @@ class TestExecution(Execution):
             self.element_exist = checkout_list
 
         ### run inline ###
-        if any(k in ['jumpto', 'skipby'] for k in how):
-            key = 'jumpto' if 'jumpto' in how else 'skipby'
+        if 'checkout' not in how:
+            key = how[0]
             attr = self._logic_attr(key, 'all')
             gate = (
                 self.bp_cache['run_value']
@@ -200,17 +200,21 @@ class TestExecution(Execution):
     def click_button(self):
         """method = click_button"""
         self._single_element()
+        how = self._logic_setup(default="click")
         try:
             self._button_clicker()
             self.cache.check_proceed()
         except NoSuchElementException:
             pass
+        if 'submit' in how:
+            sleep(5)
         # if self.element_exist:
         #     self._button_clicker()
         #     self._cache.check_proceed()
 
     def click_checkbox(self):
         """Click a CHECKBOX"""
+        print("> click checkbox")
         self._group_elements()
         try:
             self._button_clicker()
@@ -219,6 +223,7 @@ class TestExecution(Execution):
         #     self._button_clicker()
         #     time.sleep(0.5)
         except NoSuchElementException:
+            print("> click None")
             pass
 
     def click_radio(self):
