@@ -1,4 +1,4 @@
-from src.helper import print_table
+from src.helper import print_table, Timer
 from src.operation.exec_valid import ValidateExecution
 from src.operation.exec_test import TestExecution
 from src.processing.process import Process
@@ -61,8 +61,11 @@ class MainFrame:
             # print(data_interface.get_blueprint_cache)
 
             # Block for TestExecution
+            timer = Timer()
+            timer.begin()
             test_exe = TestExecution(process.driver, cache)
             test_exe.execute_func(execute_for='run')
+            timer.end()
 
             # Debugging msg
             # print("Test cache passing --->")

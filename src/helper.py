@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 
 def inline_arg_compile(args):
@@ -78,6 +79,21 @@ def print_table(input_dict, title='', header=('Key', 'Value'), style=('', '-')):
     # bot boader
     print(style[0] * width_full)
     print("\n")
+
+
+class Timer:
+    def __init__(self):
+        super().__init__()
+        self.t0 = None
+        self.te = None
+
+    def begin(self):
+        self.t0 = datetime.now()
+
+    def end(self):
+        self.te = datetime.now()
+        d = self.te - self.t0
+        print(f"Used {d.seconds} Seconds")
 
 
 # print(inline_arg_compile('--match'))

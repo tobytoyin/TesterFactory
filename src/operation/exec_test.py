@@ -7,6 +7,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.keys import Keys
 
 
 class TestExecution(Execution):
@@ -113,8 +114,8 @@ class TestExecution(Execution):
         except (ElementClickInterceptedException, ElementNotInteractableException):
             js_command = 'arguments[0].click();'
             driver.execute_script(js_command, element)
-        except ElementNotInteractableException:
-            element.submit()
+        # except ElementNotInteractableException:
+        #     element.submit()
         except AssertionError:
             print("> LOCATOR: Button does not exist")
 
@@ -170,6 +171,7 @@ class TestExecution(Execution):
         If value = Key, it will lookup the {Yes, No} in run_value and apply the above conditions.
         """
         ### initiate ###
+        print("checkout start")
         locator, path, driver = self._locators()
         how = self._logic_setup(default='checkout')
         checkout_list = driver.find_elements(locator, path)  # This should be a []
@@ -196,21 +198,28 @@ class TestExecution(Execution):
 
             if yes_exist or no_not_exist:  # value = Yes & Exist ==> jump
                 self.cache.cache_add(**{key: attr['input']})
+        print("checkout done")
 
     def click_button(self):
-        """method = click_button"""
+        """
+        method = click_button
+        logic: {
+            '--click': Ordinary click, 
+            '--submit': Form submission click
+        }
+        """
         self._single_element()
         how = self._logic_setup(default="click")
+
         try:
-            self._button_clicker()
+            if 'click' in how:
+                self._button_clicker()
+            elif 'submit' in how: 
+                self._button_clicker()
+                sleep(5)
             self.cache.check_proceed()
         except NoSuchElementException:
             pass
-        if 'submit' in how:
-            sleep(5)
-        # if self.element_exist:
-        #     self._button_clicker()
-        #     self._cache.check_proceed()
 
     def click_checkbox(self):
         """Click a CHECKBOX"""
@@ -223,9 +232,9 @@ class TestExecution(Execution):
         #     self._button_clicker()
         #     time.sleep(0.5)
         except NoSuchElementException:
-            print("> click None")
             pass
-
+        print("> click None")
+        
     def click_radio(self):
         """Click a RADIO button"""
         self._group_elements()
@@ -277,21 +286,24 @@ class TestExecution(Execution):
         self._single_element()
         element = self.element_exist
 
-        if self.element_exist():
+        if self.element_exist:
             locator, path, driver = self._locators()
             value = self.bp_cache['run_value']
-            js_template = 'document.{method}("{path}").value = "{value}";'.format(
-                path=path, value=value
-            )
+            js_template = 'document.{method}("{path}").value = "{value}";'
+            js_command = ''
+            self.element_exist.send_keys(value, Keys.TAB)
+            sleep(1)
+            # print(value)
 
-            # js get id
-            if locator == 'id':
-                js_command = js_template.format(method='getElementById')
-            # css query
-            elif locator == 'css':
-                js_command = js_template.format(method='querySelector')
-            # execute command
-            driver.execute_script(js_command, element)
+            # # js get id
+            # if locator == 'id':
+            #     js_command = js_template.format(method='getElementById', path=path, value=value)
+            # # css query
+            # elif locator == 'css selector':
+            #     js_command = js_template.format(method='querySelector', path=path, value=value)
+            # # execute command
+            # driver.execute_script(js_command)
+            # self.element_exist.submit()
 
     def screencap(self, file_name):
         """Take a full screenshot"""

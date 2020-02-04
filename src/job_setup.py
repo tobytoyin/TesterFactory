@@ -44,13 +44,13 @@ class Factory:
         bp_maps = {}
 
         for sheet in sh:
-            bp_maps[sheet] = pd.read_excel(wb, sheet)
+            bp_maps[sheet] = pd.read_excel(wb, sheet, dtype=object)
         return bp_maps
 
     @property
     def test_inputs(self):
         wb, _, tg = self.book_and_sheets(book_key='caseMap')
-        test_inputs = pd.read_excel(wb, tg, dtype=str).dropna(how='all')
+        test_inputs = pd.read_excel(wb, tg, dtype=object).dropna(how='all')
         return test_inputs
 
     @property

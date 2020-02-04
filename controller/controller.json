@@ -1,19 +1,19 @@
 {
     "service": {
         "_comment_workers": "defines the number of workers to run cases",
-        "workers": 2,
+        "workers": 1,
         "_comment_options": "define additional arguments for web-driver",
         "options": ["--start-maximized", "--log-level=3"]
     },
     "flowMap": {
         "path": "resources/core",
-        "fileName": "runflow.xlsx",
+        "fileName": "travel-plus.xlsx",
         "_comment_componentMasterSheetName": "defines the sheet that hold all master web-element which can be reuse in multiple cases.",
         "componentMasterSheetName": ""
     },
     "caseMap": {
         "path": "resources/input",
-        "fileName": "sme_test.xlsx",
+        "fileName": "travel-test.xlsx",
         "blueprintTemplateCol": "",
         "_comment_sheetName": "defines the sheet to open",
         "sheetName": "test",
