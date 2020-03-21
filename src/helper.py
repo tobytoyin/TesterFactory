@@ -2,6 +2,12 @@ import re
 from datetime import datetime
 
 
+def path_stroke_fix(path):
+    """help to correct the path names of a given path"""
+    path = path.replace('\\', '/')
+    return path if path[-1] == '/' else f"{path}/"
+
+
 def inline_arg_compile(args):
     """
     Using regex to load inline arguments.
