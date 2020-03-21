@@ -1,0 +1,48 @@
+{
+    "test_steps_file": {
+        "path": "resources/core",
+        "file_name": "travel-plus-runflow.xlsx",
+        "components_lib": "components"
+    },
+    "test_cases_file": {
+        "path": "resources/input",
+        "file_name": "travel-test.xlsx",
+        "blueprintTemplateCol": "",
+        "additional_output_columns": ["remarks"]
+    },
+
+    "output_file": {
+        "path": "output",
+        "test_exe_file_name": "test_output.csv",
+        "test_summary_file_name": "test_summary.csv"
+    },
+    "service": {
+        "num_workers": 1,
+        "options": ["--start-maximized", "--log-level=3"],
+        "debug_mode": false
+    },
+    "reader_settings": {
+        "test_steps": {
+            "keys": {
+                "step_index": "index",
+                "selector": "selector",
+                "source": "source",
+                "test_method": "method",
+                "test_logic": "logic",
+                "data_key": "key",
+                "validate_method": "validate_method",
+                "validate_data_key": "validate_key",
+                "validate_logic": "validate_logic"
+            },
+            "symbols": {
+                "skip_sym": "%",
+                "lookup_sym": "master"
+            }
+        },
+        "test_case": {
+            "keys": {
+                "case_id": "test_id"
+            }
+        }
+    }
+}
