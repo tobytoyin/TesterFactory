@@ -1,5 +1,8 @@
 # TesterFactory
 
+# Config File
+`/config/config.json` is used to make configuration for the application
+
 # Action-functions & their Validate-functions Example
 
 ## 1. Lookup
