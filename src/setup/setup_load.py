@@ -1,3 +1,5 @@
+## Use to setup testing data, config settings to Process() ##
+
 import json
 import pandas as pd
 from src.helper import path_stroke_fix
@@ -28,17 +30,22 @@ class Loader:
 
     ### export configs for modules ###
     @property
-    def process_config(self):
+    def assembly_config(self):
         """Export configs for `Process` object"""
         driver_options = self.config['service']['options']
         output_col = self.config['test_cases_file']['additional_output_columns']
-        process_configs = {
-            'driver_options': driver_options,
-            'output_options': output_col,
-            'teststep_config': self.teststep_config,
-            'case_id': self.config['reader_settings']['test_case']['keys']['case_id'],
+        assembly_config = {
+            'process_config': {
+                'driver_options': driver_options,
+                'output_options': output_col,
+                'teststep_config': self.teststep_config,
+                'case_id': self.config['reader_settings']['test_case']['keys'][
+                    'case_id'
+                ],
+            },
+            'assembly_config': self.config['assembly_settings'],
         }
-        return process_configs
+        return assembly_config
 
     @property
     def teststep_config(self):
