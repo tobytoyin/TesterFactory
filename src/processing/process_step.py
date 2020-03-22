@@ -53,7 +53,7 @@ class Process:
 
             ## Determine Logics #
             nan_skip = str(cur_teststep[handle_for_key]) == 'nan'
-            sym_skip = cur_teststep[handle_for_key].startswith(symbols['skip_sym'])
+            sym_skip = str(cur_teststep[handle_for_key]).startswith(symbols['skip_sym'])
 
             ## Logical Outcome ##
             skip_step = nan_skip or sym_skip
@@ -81,9 +81,10 @@ class Process:
             additional_outputs = self.config['output_options']
             if additional_outputs:
                 for add_col in additional_outputs:
-                    cache.data_key_add(f'add_{add_col}')
+                    cache.data_key_add(f'add_{add_col}', add_to='exe')
                     cache.data_load(
-                        **{f'add_{add_col}': ('string', self.testcase[add_col])}
+                        load_to='exe',
+                        **{f'add_{add_col}': ('string', self.testcase[add_col])},
                     )
 
             ## 3. Compile inline-logic and add them as _args dict ##
@@ -94,7 +95,9 @@ class Process:
 
             ## 4. Load data into the Cache of current step ##
             cache.data_load(
+                load_to='exe',
                 ref_testcase_id=('string', self.testcase[self.config['case_id']]),
+                ref_testcase_section=('string', self.testcase['section']),
                 exe_teststep_index=('string', cur_teststep[keys['step_index']]),
                 exe_teststep_selector=('string', cur_teststep[keys['selector']]),
                 exe_teststep_source=('string', cur_teststep[keys['source']]),
@@ -118,6 +121,13 @@ class Process:
             return cache
         else:
             raise StopIteration
+
+    def new_process_initialize(self, process_iter, g, prev):
+        "Starting procedure for starting a new teststep (i to n)"
+        cache: Cache = process_iter.__next__()
+        cache.data_load(load_to='log', exe_global_index=('any', g))
+        cache.backup_cache(prev)
+        return cache
 
     def ptr_change(self, new_ptr):
         "Change the ptr of the iterator to a new value"
