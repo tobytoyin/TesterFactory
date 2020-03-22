@@ -1,14 +1,14 @@
 {
     "test_steps_file": {
         "path": "resources/core",
-        "file_name": "travel-plus-runflow.xlsx",
-        "components_lib": "components"
+        "file_name": "runflow.xlsx",
+        "components_lib": "v2"
     },
     "test_cases_file": {
         "path": "resources/input",
-        "file_name": "travel-test.xlsx",
+        "file_name": "home.xlsx",
         "blueprintTemplateCol": "",
-        "additional_output_columns": ["remarks"]
+        "additional_output_columns": []
     },
 
     "output_file": {
@@ -18,15 +18,14 @@
     },
     "service": {
         "num_workers": 1,
-        "options": ["--start-maximized", "--log-level=3"],
-        "debug_mode": false
+        "options": ["--start-maximized", "--log-level=3"]
     },
     "reader_settings": {
         "test_steps": {
             "keys": {
                 "step_index": "index",
-                "selector": "selector",
-                "source": "source",
+                "selector": "locator",
+                "source": "path",
                 "test_method": "method",
                 "test_logic": "logic",
                 "data_key": "key",
@@ -44,5 +43,12 @@
                 "case_id": "test_id"
             }
         }
+    },
+    "assembly_settings": {
+        "print_table": {
+            "print_log": true,
+            "print_tem": true
+        },
+        "stop_when_fail": true
     }
 }
