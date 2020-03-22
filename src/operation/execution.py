@@ -20,14 +20,15 @@ class Execution:
         # WebDriver Setup
         self.driver = driver
         self.driver.implicitly_wait(10)
-        self.driver_wait = WebDriverWait(self.driver, 10)
+        self.driver_wait = WebDriverWait(self.driver, 20)
 
         # Caches
         self.cache = cache
-        self.bp_cache = self.cache.get_bp_cache
+        # self.bp_cache = self.cache.get_bp_cache
+        self.bp_cache = self.cache.get_cache(which_cache='exe')
 
         # Values that commonly used
-        self.tc = self.bp_cache['run_tc']  # test case id
+        self.tc = self.bp_cache['ref_testcase_id']  # test case id
         self.element_exist = None  # determine whether a web-element exist or not
 
     ##### FUNCTIONS THAT VARY BY CHILD_CLASS #####
@@ -55,34 +56,44 @@ class Execution:
             return self.logic_args[logic_name][attr]
 
     ##### EXECUTION FUNCTION #####
-    def execute_func(self, execute_for='run'):
+    def execute_func(self, execute_for='exe_teststep'):
         """Trigger function through string in the blueprint"""
         assert execute_for in {
-            'run',
+            'exe_teststep',
             'validate',
-        }, "Usage: execute_for in {'run', 'validate'}"
+        }, "Usage: execute_for in {'exe_teststep', 'validate'}"
         # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
         bp_cache = self.bp_cache
 
-        if str(bp_cache[key]) == 'nan':
+        # Break and skip condition
+        empty_func_cond = str(bp_cache[key]) == 'nan'
+        if empty_func_cond:
             return None  # break, no func to execute
         func = getattr(self, bp_cache[key])
         func()
 
         ### add element into cache ###
         if self.element_exist is None:
-            self.cache.cache_add(element_exist=0)
+            self.cache.data_load(load_to='tem', element_exist=('any', 0))
         else:
-            self.cache.cache_add(element_exist=self.element_exist)
+            self.cache.data_load(
+                load_to='tem', element_exist=('any', self.element_exist)
+            )
 
         ### add identification to log_cache when Validation###
         # tc -- id for test case data
         # map_index -- id for execution logic row
         if execute_for == 'validate':
-            self.cache.log_input(tc=self.tc, map_index=bp_cache['run_index'])
+            self.cache.data_load(
+                load_to='log',
+                testcase_id=('string', self.tc),
+                teststep_index=('string', bp_cache['exe_teststep_index']),
+            )
 
             # add "add_" additional fields
             for item in bp_cache.keys():
                 if "add_" in item:
-                    self.cache.log_input(**{item: bp_cache[item]})
+                    self.cache.data_load(
+                        load_to='log', **{item: ('string', bp_cache[item])}
+                    )

@@ -11,14 +11,14 @@ class ValidateExecution(Execution):
         super().__init__(driver, cache)
         # self.cache = cache.get_cache
         # self.bp_cache = cache.get_bp_cache
-        self.s_cache = cache.get_cache
+        self.s_cache = cache.get_cache(which_cache='tem')
         self.terminate = True
         self.result = 'Fail'
 
     @property
     def validate_value(self):
         """Retrieve the value to validate for"""
-        return self.bp_cache['validate_value']
+        return self.bp_cache['validate_data']
 
     @property
     def validate_require(self):
@@ -27,7 +27,7 @@ class ValidateExecution(Execution):
     @property
     def logic_args(self):
         """Retrieve inline args and inputs for validation"""
-        return self.bp_cache['validate_logic_fetch']
+        return self.bp_cache['validate_arg']
 
     ### helper ###
     def is_good(self):
@@ -92,11 +92,11 @@ class ValidateExecution(Execution):
         ### initiate ###
         assert (
             self.s_cache != {}
-        ), "Cannot conduct validation without checking a specific elements previously"
-        element_exist = self.s_cache['element_exist']
+        ), "Cannot conduct validation without `checkout` a specific elements previously"
+        element_exist = self.s_cache['element_exist']  # retrieve previous element
         how = self._logic_setup(default='exist')
         validate_key = self.bp_cache['validate_key']
-        validate_value = self.bp_cache['validate_value']
+        validate_value = self.bp_cache['validate_data']
         placeholder = 'EXIST'
         tp = tn = None
 
@@ -127,11 +127,18 @@ class ValidateExecution(Execution):
         else:
             pass
 
-        self.cache.log_input(
-            validate_method=f"checkout-validation BY:{how}",
-            expect=f"{validate_key} {placeholder}={validate_value}",
-            actual=f"{validate_key} {placeholder}={tp if validate_value == 'Yes' else tn}",
-            result=self.result,
+        self.cache.data_load(
+            load_to='log',
+            validate_method=('string', f"checkout-validation BY:{how}"),
+            testcase_expect=(
+                'string',
+                f"{validate_key} {placeholder}={validate_value}",
+            ),
+            testcase_actual=(
+                'string',
+                f"{validate_key} {placeholder}={tp if validate_value == 'Yes' else tn}",
+            ),
+            validate_result=('any', self.result),
         )
 
     def redirect_validate(self):
