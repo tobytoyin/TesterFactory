@@ -7,7 +7,6 @@
     "test_cases_file": {
         "path": "resources/input",
         "file_name": "home.xlsx",
-        "blueprintTemplateCol": "",
         "additional_output_columns": []
     },
 
@@ -40,7 +39,8 @@
         },
         "test_case": {
             "keys": {
-                "case_id": "test_id"
+                "case_id": "test_id",
+                "case_template": "template"
             }
         }
     },

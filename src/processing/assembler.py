@@ -3,19 +3,19 @@ from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from src.processing.cache import Cache
 from src.helper import inline_arg_compile
+from src.setup.setup_load import assembler_config
 
 
-class Process:
-    def __init__(self, process_config, testcase, teststep, component_map):
+class Assembler:
+    def __init__(self, testcase, teststep, component_map):
         """
         Parameter: 
         -----
-        `process_configs`: dict of configs data. Controlled in `setup_load.py`
+        `assembler_config`: dict of configs data. Controlled in `setup_load.py`
         `testcase`: a single testcase 
         `teststep`: a single teststep to complete the `testcase`
         `component_map`: a dict to lookup defined common components
         """
-        self.config = process_config
         self.driver = self._create_driver()
         self.testcase = testcase
         self.teststep = teststep
@@ -65,8 +65,8 @@ class Process:
         ptr = self.ptr
 
         # Set up Keys in the TestStepFile#
-        keys = self.config['teststep_config']['keys']
-        symbols = self.config['teststep_config']['symbols']
+        keys = assembler_config['teststep_config']['keys']
+        symbols = assembler_config['teststep_config']['symbols']
 
         # conduct a looping
         if ptr <= self.end_index:
@@ -78,7 +78,7 @@ class Process:
             cur_teststep = _source_location(lookup_component=lookup_to_map)
 
             ## 2. Load addition column into the Cache ##
-            additional_outputs = self.config['output_options']
+            additional_outputs = assembler_config['output_options']
             if additional_outputs:
                 for add_col in additional_outputs:
                     cache.data_key_add(f'add_{add_col}', add_to='exe')
@@ -96,7 +96,7 @@ class Process:
             ## 4. Load data into the Cache of current step ##
             cache.data_load(
                 load_to='exe',
-                ref_testcase_id=('string', self.testcase[self.config['case_id']]),
+                ref_testcase_id=('string', self.testcase[assembler_config['case_id']]),
                 ref_testcase_section=('string', self.testcase['section']),
                 exe_teststep_index=('string', cur_teststep[keys['step_index']]),
                 exe_teststep_selector=('string', cur_teststep[keys['selector']]),
@@ -145,7 +145,7 @@ class Process:
         options.add_experimental_option('useAutomationExtension', False)
 
         # loop options setup
-        for arg in self.config['driver_options']:
+        for arg in assembler_config['driver_options']:
             options.add_argument(arg)
         driver = webdriver.Chrome(
             'resources/webdrivers/chromedriver.exe', options=options

@@ -34,11 +34,11 @@ class ConfigLoader(Loader):
         return teststep_key_names
 
     @property
-    def assembly_config(self):
+    def process_config(self):
         """Export configs for `Process` object"""
         driver_options = self.config['service']['options']
         output_col = self.config['test_cases_file']['additional_output_columns']
-        assembly_config = {
+        process_config = {
             'assembler_config': {
                 'driver_options': driver_options,
                 'output_options': output_col,
@@ -49,7 +49,7 @@ class ConfigLoader(Loader):
             },
             'assembly_config': self.config['assembly_settings'],
         }
-        return assembly_config
+        return process_config
 
 
 class DataLoader(Loader):
@@ -106,4 +106,6 @@ class DataLoader(Loader):
 if __name__ == "__main__":
     pass
 else:
-    assembly_config = ConfigLoader(path=path).assembly_config
+    process_config = ConfigLoader(path=path).process_config
+    assembler_config = process_config['assembler_config']
+    assembly_config = process_config['assembly_config']

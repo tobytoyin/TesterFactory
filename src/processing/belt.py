@@ -1,13 +1,14 @@
 from src.helper import print_table
-from src.processing.process_step import Process
+from src.processing.assembler import Assembler
 from src.operation.exec_valid import ValidateExecution
 from src.operation.exec_test import TestExecution
 from src.processing.cache import Cache
 from src.helper import print_table
 from multiprocessing import Lock
+from src.setup.setup_load import assembly_config
 
 
-class AssemblyLine:
+class AssemblyBelt:
     """
     Parameters: 
     ---
@@ -23,15 +24,11 @@ class AssemblyLine:
 
     def __init__(
         self,
-        process_bundle: dict(
-            config=None, worker_testcase=None, teststep=None, components_lib=None
-        ),
+        process_bundle: dict(worker_testcase=None, teststep=None, components_lib=None),
     ):
-        self.assembly_config = process_bundle['config']['assembly_config']
         self._testreports = []  # reports after completing a step
         self.prev = {}  # storing the previous step
-        self.process = Process(
-            process_config=process_bundle['config']['process_config'],
+        self.process = Assembler(
             testcase=process_bundle['worker_testcase'],
             teststep=process_bundle['teststep'],
             component_map=process_bundle['components_lib'],
@@ -75,9 +72,7 @@ class AssemblyLine:
             self._ptr_logic_gate(cache, process_cur)
 
             # Print Table
-            self._print_table(
-                cache=cache, print_config=self.assembly_config['print_table']
-            )
+            self._print_table(cache=cache, print_config=assembly_config['print_table'])
 
             # append report
             log_cache = cache.get_cache(which_cache='log')
@@ -90,10 +85,7 @@ class AssemblyLine:
 
             # end check
             try:
-                if (
-                    validate_exe.validate_require
-                    and self.assembly_config['stop_when_fail']
-                ):
+                if validate_exe.validate_require and assembly_config['stop_when_fail']:
                     assert validate_exe.terminate is False
             except AssertionError:
                 print(f"> {validate_exe.tc} has been terminated")
@@ -103,7 +95,7 @@ class AssemblyLine:
                 process_cur = process_iter.ptr
 
         process.driver.close()
-        return self.get_reports
+        return self.get_reports()
 
     def _ptr_logic_gate(self, cache: Cache, process_cur):
         "To determine whether point needs to change based on cache.logic"
