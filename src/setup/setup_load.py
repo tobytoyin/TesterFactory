@@ -20,22 +20,26 @@ class Loader:
         path = f"{cur_dir}config/config.json"
         return json.load(open(path, 'r'))
 
-    def _get_workbook(self, config_key=''):
-        assert config_key != '', "config_key cannot be empty"
-        location = path_stroke_fix(self.config[config_key]['path'])
-        file_name = path_stroke_fix(self.config[config_key]['file_name'])[:-1]
-        path = f"{location}{file_name}"
-        workbook = pd.ExcelFile(path)
-        return workbook
 
-    ### export configs for modules ###
+class ConfigLoader(Loader):
+    def __init__(self, path):
+        "Child of Loader, which load the json, and export the config data"
+        super().__init__(path)
+        ### export configs for modules ###
+
+    @property
+    def teststep_config(self):
+        """Export configs for teststeps"""
+        teststep_key_names = self.config['reader_settings']['test_steps']
+        return teststep_key_names
+
     @property
     def assembly_config(self):
         """Export configs for `Process` object"""
         driver_options = self.config['service']['options']
         output_col = self.config['test_cases_file']['additional_output_columns']
         assembly_config = {
-            'process_config': {
+            'assembler_config': {
                 'driver_options': driver_options,
                 'output_options': output_col,
                 'teststep_config': self.teststep_config,
@@ -47,11 +51,19 @@ class Loader:
         }
         return assembly_config
 
-    @property
-    def teststep_config(self):
-        """Export configs for teststeps"""
-        teststep_key_names = self.config['reader_settings']['test_steps']
-        return teststep_key_names
+
+class DataLoader(Loader):
+    def __init__(self, path):
+        "Child of Loader, which load the json, and export the testing data"
+        super().__init__(path)
+
+    def _get_workbook(self, config_key=''):
+        assert config_key != '', "config_key cannot be empty"
+        location = path_stroke_fix(self.config[config_key]['path'])
+        file_name = path_stroke_fix(self.config[config_key]['file_name'])[:-1]
+        path = f"{location}{file_name}"
+        workbook = pd.ExcelFile(path)
+        return workbook
 
     @property
     def teststeps_map(self):
@@ -89,3 +101,9 @@ class Loader:
         del df
 
         return assign.assign_workers()
+
+
+if __name__ == "__main__":
+    pass
+else:
+    assembly_config = ConfigLoader(path=path).assembly_config
