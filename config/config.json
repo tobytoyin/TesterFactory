@@ -1,12 +1,12 @@
 {
     "test_steps_file": {
-        "path": "resources/core",
+        "path": "data/teststep_inputs",
         "file_name": "runflow.xlsx",
         "components_lib": "v2"
     },
     "test_cases_file": {
-        "path": "resources/input",
-        "file_name": "home.xlsx",
+        "path": "data/testcase_inputs",
+        "file_name": "function_test.xlsx",
         "additional_output_columns": []
     },
 

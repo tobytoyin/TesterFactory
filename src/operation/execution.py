@@ -88,6 +88,7 @@ class Execution:
             self.cache.data_load(
                 load_to='log',
                 testcase_id=('string', self.tc),
+                testcase_section=('string', bp_cache['ref_testcase_section']),
                 teststep_index=('string', bp_cache['exe_teststep_index']),
             )
 

@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class Cache:
     def __init__(self):
         """
@@ -45,7 +48,7 @@ class Cache:
             'validate_method': None,
             ###
             'error_alert': None,
-            'exe_global_index': None,
+            'global_index': None,
         }
 
         ### Misc Cache ###

@@ -24,14 +24,16 @@ class AssemblyBelt:
 
     def __init__(
         self,
-        process_bundle: dict(worker_testcase=None, teststep=None, components_lib=None),
+        material_per_task: dict(
+            worker_testcase=None, teststep=None, components_lib=None
+        ),
     ):
         self._testreports = []  # reports after completing a step
         self.prev = {}  # storing the previous step
         self.process = Assembler(
-            testcase=process_bundle['worker_testcase'],
-            teststep=process_bundle['teststep'],
-            component_map=process_bundle['components_lib'],
+            testcase=material_per_task['worker_testcase'],
+            teststep=material_per_task['teststep'],
+            component_map=material_per_task['components_lib'],
         )
 
     ### Golden Retriever ###
@@ -58,7 +60,7 @@ class AssemblyBelt:
             # TODO a webstatus assertion
 
             cache = process.new_process_initialize(
-                process_iter=process_iter, g=global_step_idx, prev=self.prev
+                process_iter=process_iter, global_index=global_step_idx, prev=self.prev
             )
 
             test_exe = TestExecution(process.driver, cache)
@@ -118,7 +120,7 @@ class AssemblyBelt:
                 print_table(
                     cache.get_cache(which_cache=cache_type[6::]),  # name after "print_"
                     header=(f"{cache_type[6::]}_cache Fields", 'Values'),
-                    title=cache.ref_id,
+                    title=f"{cache.ref_id} - {cache_type[6::]}",
                     style=('=', '-'),
                 )
                 print_lock.release()

@@ -4,14 +4,13 @@ import json
 import pandas as pd
 from src.helper import path_stroke_fix
 from src.setup.setup_worker import AssignWorkers
-
-path = 'C:/Users/tobyt/Projects/TestFactory'
+import os
 
 
 class Loader:
     """Loader is responsible to load input files into the framework running structure"""
 
-    def __init__(self, path):
+    def __init__(self, path=os.getcwd()):
         self.config = self._get_json(path)
 
     def _get_json(self, path):
@@ -22,9 +21,9 @@ class Loader:
 
 
 class ConfigLoader(Loader):
-    def __init__(self, path):
+    def __init__(self):
         "Child of Loader, which load the json, and export the config data"
-        super().__init__(path)
+        super().__init__()
         ### export configs for modules ###
 
     @property
@@ -43,9 +42,7 @@ class ConfigLoader(Loader):
                 'driver_options': driver_options,
                 'output_options': output_col,
                 'teststep_config': self.teststep_config,
-                'case_id': self.config['reader_settings']['test_case']['keys'][
-                    'case_id'
-                ],
+                'testcase_config': self.config['reader_settings']['test_case']['keys'],
             },
             'assembly_config': self.config['assembly_settings'],
         }
@@ -53,9 +50,9 @@ class ConfigLoader(Loader):
 
 
 class DataLoader(Loader):
-    def __init__(self, path):
+    def __init__(self):
         "Child of Loader, which load the json, and export the testing data"
-        super().__init__(path)
+        super().__init__()
 
     def _get_workbook(self, config_key=''):
         assert config_key != '', "config_key cannot be empty"
@@ -106,6 +103,6 @@ class DataLoader(Loader):
 if __name__ == "__main__":
     pass
 else:
-    process_config = ConfigLoader(path=path).process_config
+    process_config = ConfigLoader().process_config
     assembler_config = process_config['assembler_config']
     assembly_config = process_config['assembly_config']

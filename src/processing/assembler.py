@@ -96,7 +96,10 @@ class Assembler:
             ## 4. Load data into the Cache of current step ##
             cache.data_load(
                 load_to='exe',
-                ref_testcase_id=('string', self.testcase[assembler_config['case_id']]),
+                ref_testcase_id=(
+                    'string',
+                    self.testcase[assembler_config['testcase_config']['case_id']],
+                ),
                 ref_testcase_section=('string', self.testcase['section']),
                 exe_teststep_index=('string', cur_teststep[keys['step_index']]),
                 exe_teststep_selector=('string', cur_teststep[keys['selector']]),
@@ -122,10 +125,10 @@ class Assembler:
         else:
             raise StopIteration
 
-    def new_process_initialize(self, process_iter, g, prev):
+    def new_process_initialize(self, process_iter=None, global_index=None, prev=None):
         "Starting procedure for starting a new teststep (i to n)"
         cache: Cache = process_iter.__next__()
-        cache.data_load(load_to='log', exe_global_index=('any', g))
+        cache.data_load(load_to='log', global_index=('any', global_index))
         cache.backup_cache(prev)
         return cache
 

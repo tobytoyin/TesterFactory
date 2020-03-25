@@ -1,26 +1,32 @@
-from src.setup.setup_load import Loader
-from src.processing.process_step import Process
-from src.processing.belt import AssemblyLine
+from src.setup.setup_load import DataLoader
+from src.processing.assembler import Assembler
+from src.processing.belt import AssemblyBelt
+from src.processing.lines import AssemblyLines
 import os
 from src.operation.exec_test import TestExecution
 from src.operation.exec_valid import ValidateExecution
+from src.setup.setup_load import assembly_config
 import pprint
 
+pp = pprint.PrettyPrinter(indent=4)
 
-app_path = os.getcwd()
+if __name__ == '__main__':
+    a = AssemblyLines()
+    a._get_lines_ready()
 
-loader = Loader(app_path)
-config = loader.config
-process_bundle = {
-    'config': loader.assembly_config,
-    'worker_testcase': loader.assign_testcase['worker_1'].iloc[0],
-    'teststep': loader.teststeps_map[0]['test_checkout'],
-    'components_lib': loader.teststeps_map[1],
-}
+# app_path = os.getcwd()
 
-assembly_line = AssemblyLine(process_bundle=process_bundle)
-assembly_line.start()
+# loader: DataLoader = DataLoader(app_path)
+# process_bundle = {
+#     'config': assembly_config,
+#     'worker_testcase': loader.assign_testcase['worker_1'].iloc[0],
+#     'teststep': loader.teststeps_map[0]['test_checkout'],
+#     'components_lib': loader.teststeps_map[1],
+# }
 
+# assembly_line = AssemblyBelt(process_bundle=process_bundle)
+# reports = assembly_line.start()
+# pp.pprint(reports)
 
 # iterator = iter(process)
 
