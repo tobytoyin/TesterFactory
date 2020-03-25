@@ -49,6 +49,7 @@
             "print_log": true,
             "print_tem": true
         },
-        "stop_when_fail": true
+        "stop_when_fail": true,
+        "debug_mode": true
     }
 }

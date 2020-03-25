@@ -2,7 +2,7 @@ from src.setup.setup_load import DataLoader
 from src.processing.belt import AssemblyBelt
 import pprint
 from multiprocessing import Process, Manager
-from src.setup.setup_load import assembler_config
+from src.setup.setup_load import assembler_config, assembly_config
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -18,19 +18,38 @@ class AssemblyLines:
 
     def get_lines_start(self):
         "Split test cases to #num_workers"
+
+        def _parallel_process():
+            # launch parallel jobs
+            for worker_i in workers_get_ready.items():
+                process = Process(target=self._belt_unit_run, args=(worker_i,))
+                jobs_to_start.append(process)
+                process.start()
+
+            # join parallel jobs
+            for job in jobs_to_start:
+                job.join()
+
+        def _debug_process():
+            self._belt_unit_run(('worker_1', workers_get_ready['worker_1']))
+
         workers_get_ready = self.TestSet.assign_testcase
         jobs_to_start = []
 
-        # launch parallel jobs
-        for worker_i in workers_get_ready.items():
-            print(worker_i)
-            process = Process(target=self._belt_unit_run, args=(worker_i,))
-            jobs_to_start.append(process)
-            process.start()
+        # test_run, if debug is true
+        if assembly_config['debug_mode']:
+            _debug_process()
+        else:
+            _parallel_process()
+            # # launch parallel jobs
+            # for worker_i in workers_get_ready.items():
+            #     process = Process(target=self._belt_unit_run, args=(worker_i,))
+            #     jobs_to_start.append(process)
+            #     process.start()
 
-        # join parallel jobs
-        for job in jobs_to_start:
-            job.join()
+            # # join parallel jobs
+            # for job in jobs_to_start:
+            #     job.join()
 
     def _belt_unit_run(self, worker: tuple):
         "worker: a tuple (worker_id, dataframe)"
