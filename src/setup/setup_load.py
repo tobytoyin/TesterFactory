@@ -36,9 +36,6 @@ class ConfigLoader(Loader):
     def process_config(self):
         """Export configs for `Process` object"""
         driver_options = self.config['service']['options']
-        output_col = self.config['export_settings']['additional_output_columns']
-        group_col = self.config['export_settings']['additional_verify_hierarchy']
-
         process_config = {
             'assembler_config': {
                 'driver_options': driver_options,
@@ -53,6 +50,8 @@ class ConfigLoader(Loader):
     def export_config(self):
         config = self.config['export_settings']
         config['name'] = self.config['test_cases_file']['file_name'].split('.')[0]
+        config['add_columns'] = [f"add_{item}" for item in config['add_columns']]
+        config['ref_columns'] = [f"ref_{item}" for item in config['ref_columns']]
         return config
 
 

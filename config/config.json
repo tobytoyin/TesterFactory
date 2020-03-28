@@ -11,8 +11,8 @@
 
     "export_settings": {
         "path": "output",
-        "additional_output_columns": ["remarks"],
-        "additional_verify_hierarchy": ["group"]
+        "add_columns": ["remarks"],
+        "ref_columns": ["group"]
     },
     "service": {
         "num_workers": 2,
