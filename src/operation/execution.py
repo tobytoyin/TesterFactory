@@ -28,7 +28,7 @@ class Execution:
         self.bp_cache = self.cache.get_cache(which_cache='exe')
 
         # Values that commonly used
-        self.tc = self.bp_cache['ref_testcase_id']  # test case id
+        self.tc = self.bp_cache['ref_id']  # test case id
         self.element_exist = None  # determine whether a web-element exist or not
 
     ##### FUNCTIONS THAT VARY BY CHILD_CLASS #####
@@ -87,14 +87,14 @@ class Execution:
         if execute_for == 'validate':
             self.cache.data_load(
                 load_to='log',
-                testcase_id=('string', self.tc),
-                testcase_section=('string', bp_cache['ref_testcase_section']),
+                # ref_id=('string', self.tc),
+                # ref_section=('string', bp_cache['ref_testcase_section']),
                 teststep_index=('string', bp_cache['exe_teststep_index']),
             )
 
             # add "add_" additional fields
             for item in bp_cache.keys():
-                if "add_" in item:
+                if ("add_" in item) | ("ref_" in item):
                     self.cache.data_load(
                         load_to='log', **{item: ('string', bp_cache[item])}
                     )

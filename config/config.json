@@ -6,17 +6,16 @@
     },
     "test_cases_file": {
         "path": "data/testcase_inputs",
-        "file_name": "function_test.xlsx",
-        "additional_output_columns": []
+        "file_name": "function_test.xlsx"
     },
 
-    "output_file": {
+    "export_settings": {
         "path": "output",
-        "test_exe_file_name": "test_output.csv",
-        "test_summary_file_name": "test_summary.csv"
+        "additional_output_columns": ["remarks"],
+        "additional_verify_hierarchy": ["group"]
     },
     "service": {
-        "num_workers": 1,
+        "num_workers": 2,
         "options": ["--start-maximized", "--log-level=3"]
     },
     "reader_settings": {
@@ -50,6 +49,6 @@
             "print_tem": true
         },
         "stop_when_fail": true,
-        "debug_mode": true
+        "debug_mode": false
     }
 }

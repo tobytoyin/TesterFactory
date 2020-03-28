@@ -16,8 +16,8 @@ class Cache:
 
         ### Input - Data structure for running a single test process ###
         self._exe_cache = {
-            'ref_testcase_id': None,
-            'ref_testcase_section': None,
+            'ref_id': None,
+            'ref_section': None,
             ###
             'exe_teststep_index': None,
             'exe_teststep_selector': None,
@@ -36,11 +36,12 @@ class Cache:
 
         ### Results - Data structure for test process logs ###
         self._log_cache = {
+            'ref_id': None,
+            'ref_section': None,
+            ###
             'teststep_index': None,
             'teststep_output': None,
             ###
-            'testcase_id': None,
-            'testcase_section': None,
             'testcase_expect': None,
             'testcase_actual': None,
             ###
@@ -64,7 +65,7 @@ class Cache:
 
     @property
     def ref_id(self):
-        return str(self._exe_cache['ref_testcase_id'])
+        return str(self._exe_cache['ref_id'])
 
     ### Flow Control Change ###
     def allow_proceed(self):
@@ -99,12 +100,16 @@ class Cache:
 
         return cache
 
-    def data_key_add(self, *args, add_to='exe'):
-        """Add list of new keys to the cache"""
-        cache = self._cache_switch(to=add_to)
-        for new_key in args:
-            self._key_validation(new_key, cache=add_to, check_exist=False)
-            cache[new_key] = None
+    def data_key_add(self, *args, add_to=[]):
+        """
+        Add list of new keys to the cache, 
+        `add_to:list`: is a list of cache name that require a new key
+        """
+        for cache_kind in add_to:
+            cache = self._cache_switch(to=cache_kind)
+            for new_key in args:
+                self._key_validation(new_key, cache=cache_kind, check_exist=False)
+                cache[new_key] = None
 
         return cache
 
@@ -153,3 +158,9 @@ class Cache:
             return self._log_cache
         else:
             raise AttributeError
+
+    def __eq__(self, other):
+        same_id = self._log_cache['ref_id'] == other._log_cache['ref_id']
+        same_step = self._log_cache['global_index'] == other._log_cache['global_index']
+        if same_id & same_step:
+            return True

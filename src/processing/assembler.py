@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from src.processing.cache import Cache
 from src.helper import inline_arg_compile
-from src.setup.setup_load import assembler_config
+from src.setup.setup_load import assembler_config, export_config
 
 
 class Assembler:
@@ -63,6 +63,21 @@ class Assembler:
             lookup_key = cur_teststep[handle_for_key]
             return 'null' if skip_step else self.testcase[lookup_key]
 
+        def _build_additional_fields(fields: list, build_for=None):
+            msg = (
+                "Use 'add' for additional info; 'ref' for additional verification group"
+            )
+            assert build_for in ['add', 'ref'], msg
+
+            for add_col in fields:
+                cache.data_key_add(f'{build_for}_{add_col}', add_to=['exe', 'log'])
+                cache.data_load(
+                    load_to='exe',
+                    **{f'{build_for}_{add_col}': ('string', self.testcase[add_col])},
+                )
+
+        #### Function core ####
+
         ptr = self.ptr
 
         # Set up Keys in the TestStepFile#
@@ -79,14 +94,14 @@ class Assembler:
             cur_teststep = _source_location(lookup_component=lookup_to_map)
 
             ## 2. Load addition column into the Cache ##
-            additional_outputs = assembler_config['output_options']
-            if additional_outputs:
-                for add_col in additional_outputs:
-                    cache.data_key_add(f'add_{add_col}', add_to='exe')
-                    cache.data_load(
-                        load_to='exe',
-                        **{f'add_{add_col}': ('string', self.testcase[add_col])},
-                    )
+            additional_outputs = export_config['additional_output_columns']
+            additional_groups = export_config['additional_verify_hierarchy']
+            _build_additional_fields(
+                additional_outputs, build_for='add'
+            ) if additional_outputs else None
+            _build_additional_fields(
+                additional_groups, build_for='ref'
+            ) if additional_groups else None
 
             ## 3. Compile inline-logic and add them as _args dict ##
             test_logic = inline_arg_compile(str(cur_teststep[keys['test_logic']]))
@@ -101,8 +116,8 @@ class Assembler:
                 #     'string',
                 #     self.testcase[assembler_config['testcase_config']['case_id']],
                 # ),
-                ref_testcase_id=('string', self.ref_id),
-                ref_testcase_section=('string', self.testcase['section']),
+                ref_id=('string', self.ref_id),
+                ref_section=('string', self.testcase['section']),
                 exe_teststep_index=('string', cur_teststep[keys['step_index']]),
                 exe_teststep_selector=('string', cur_teststep[keys['selector']]),
                 exe_teststep_source=('string', cur_teststep[keys['source']]),

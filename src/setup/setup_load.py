@@ -36,11 +36,12 @@ class ConfigLoader(Loader):
     def process_config(self):
         """Export configs for `Process` object"""
         driver_options = self.config['service']['options']
-        output_col = self.config['test_cases_file']['additional_output_columns']
+        output_col = self.config['export_settings']['additional_output_columns']
+        group_col = self.config['export_settings']['additional_verify_hierarchy']
+
         process_config = {
             'assembler_config': {
                 'driver_options': driver_options,
-                'output_options': output_col,
                 'teststep_config': self.teststep_config,
                 'testcase_config': self.config['reader_settings']['test_case']['keys'],
             },
@@ -87,7 +88,7 @@ class DataLoader(Loader):
 
         return teststeps_map, component_map
 
-    def _create_df(self):
+    def _create_testcase_df(self):
         workbook = self._get_workbook(config_key='test_cases_file')
         df = pd.DataFrame()
         for section in workbook.sheet_names:
@@ -105,9 +106,7 @@ class DataLoader(Loader):
     def assign_testcase(self):
         """assign testcase to workers"""
         num_workers = self.config['service']['num_workers']
-        df = self._create_df()
-
-        # TODO: Enable a way to prompt users that some test_id is not unique, generate assertion for them to fix it.
+        df = self._create_testcase_df()
 
         # assign tasks to workers
         assign = AssignWorkers(df, num_workers=num_workers)

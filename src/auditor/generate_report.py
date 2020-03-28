@@ -8,6 +8,7 @@ from src.setup.setup_dir import output_dir, create_output_path
 class Examiner:
     def __init__(self, testreport):
         self._testreport = testreport
+        self.log_df: pd.DataFrame = None
 
     # def _export_csv(self, name):
     #     outputfile = create_output_path(name=name)
@@ -25,6 +26,16 @@ class Examiner:
                     tem = tem.append(pd.Series(log_item))
                     examine_list.append(tem)
                     del tem
+
+        # print(examine_list)
         col_names = list(examine_list[0].keys())
-        df = pd.DataFrame(examine_list, columns=col_names)
-        df.to_csv(create_output_path(name='logs', ext='csv'))
+        self.log_df = pd.DataFrame(examine_list, columns=col_names)
+        self.log_df.to_csv(create_output_path(name='logs', ext='csv'))
+
+    def _hierarchical_result(self):
+        'Generating a summary based on the level of hierarchy as a passing point'
+        # IDEA: Allow users to generate a customer hierachy inside the section level and above the test_id level
+
+        # generate unique values of hierarchy levels
+        ref_id_unique = self.log_df['testcase_id'].unique()
+        section_unique = self.log_df['testcase_section'].unique()

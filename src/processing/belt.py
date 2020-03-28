@@ -25,16 +25,13 @@ class AssemblyBelt:
     def __init__(
         self,
         material_per_task: dict(
-            ref_testcase_id=None,
-            worker_testcase=None,
-            teststep=None,
-            components_lib=None,
+            ref_id=None, worker_testcase=None, teststep=None, components_lib=None,
         ),
     ):
         self._testreports = []  # reports after completing a step
         self.prev = {}  # storing the previous step
         self.assembler = Assembler(
-            ref_id=material_per_task['ref_testcase_id'],
+            ref_id=material_per_task['ref_id'],
             testcase=material_per_task['worker_testcase'],
             teststep=material_per_task['teststep'],
             component_map=material_per_task['components_lib'],
@@ -82,7 +79,7 @@ class AssemblyBelt:
 
             # append report
             log_cache = cache.get_cache(which_cache='log')
-            if log_cache['testcase_id']:
+            if log_cache['ref_id']:
                 self._testreports.append(log_cache)
 
             # store history
