@@ -101,6 +101,12 @@ class Timer:
         d = self.te - self.t0
         print(f"Used {d.seconds} Seconds")
 
+    def now(self):
+        t = datetime.now()
+        date = f"{t.strftime('%d')}_{t.strftime('%b')}_{t.year}"
+        time = f"{t.strftime('%X').replace(':', ',')}"
+        return f"{date}_{time}"
+
 
 # print(inline_arg_compile('--match'))
 # print(inline_arg_compile('--match(5,hi)'))
