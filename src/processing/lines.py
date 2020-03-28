@@ -5,16 +5,12 @@ from multiprocessing import Process, Manager
 from src.setup.setup_load import assembler_config, assembly_config
 
 
-pp = pprint.PrettyPrinter(indent=4)
-
-
 class AssemblyLines:
     """The AssemblyLines is a multi-processing class"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, testreport):
         self.TestSet = DataLoader()
-        self.testreport = Manager().dict()
+        self.testreport = testreport
 
     def get_lines_start(self):
         "Split test cases to #num_workers"
@@ -41,15 +37,6 @@ class AssemblyLines:
             _debug_process()
         else:
             _parallel_process()
-            # # launch parallel jobs
-            # for worker_i in workers_get_ready.items():
-            #     process = Process(target=self._belt_unit_run, args=(worker_i,))
-            #     jobs_to_start.append(process)
-            #     process.start()
-
-            # # join parallel jobs
-            # for job in jobs_to_start:
-            #     job.join()
 
     def _belt_unit_run(self, worker: tuple):
         "worker: a tuple (worker_id, dataframe)"
@@ -77,4 +64,4 @@ class AssemblyLines:
         # append results into a dict with workers set
         print(f"{worker[0]} is adding results")
         self.testreport[str(worker[0])] = worker_summary
-        return True
+        return self.testreport
