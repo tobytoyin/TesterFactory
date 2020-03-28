@@ -48,6 +48,12 @@ class ConfigLoader(Loader):
         }
         return process_config
 
+    @property
+    def export_config(self):
+        config = self.config['export_settings']
+        config['name'] = self.config['test_cases_file']['file_name'].split('.')[0]
+        return config
+
 
 class DataLoader(Loader):
     def __init__(self):
@@ -103,6 +109,8 @@ class DataLoader(Loader):
 if __name__ == "__main__":
     pass
 else:
-    process_config = ConfigLoader().process_config
+    config = ConfigLoader()
+    process_config = config.process_config
     assembler_config = process_config['assembler_config']
     assembly_config = process_config['assembly_config']
+    export_config = config.export_config
