@@ -7,16 +7,17 @@ from src.setup.setup_load import assembler_config
 
 
 class Assembler:
-    def __init__(self, testcase, teststep, component_map):
+    def __init__(self, ref_id, testcase, teststep, component_map):
         """
         Parameter: 
         -----
-        `assembler_config`: dict of configs data. Controlled in `setup_load.py`
-        `testcase`: a single testcase 
-        `teststep`: a single teststep to complete the `testcase`
+        `ref_id`: unique testcase id\n
+        `testcase`: a single testcase\n
+        `teststep`: a single teststep to complete the `testcase`\n
         `component_map`: a dict to lookup defined common components
         """
         self.driver = self._create_driver()
+        self.ref_id = ref_id
         self.testcase = testcase
         self.teststep = teststep
         self.component_map = component_map
@@ -96,10 +97,11 @@ class Assembler:
             ## 4. Load data into the Cache of current step ##
             cache.data_load(
                 load_to='exe',
-                ref_testcase_id=(
-                    'string',
-                    self.testcase[assembler_config['testcase_config']['case_id']],
-                ),
+                # ref_testcase_id=(
+                #     'string',
+                #     self.testcase[assembler_config['testcase_config']['case_id']],
+                # ),
+                ref_testcase_id=('string', self.ref_id),
                 ref_testcase_section=('string', self.testcase['section']),
                 exe_teststep_index=('string', cur_teststep[keys['step_index']]),
                 exe_teststep_selector=('string', cur_teststep[keys['selector']]),

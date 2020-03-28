@@ -45,11 +45,12 @@ class AssemblyLines:
         task_id = 1
 
         template_key = assembler_config['testcase_config']['case_template']
-        for _, task_to_do in worker[1].iterrows():
+        for ref_testcase_id, task_to_do in worker[1].iterrows():
             template_to_use = task_to_do[template_key]
 
             # create the material for process
             material_per_task = {
+                'ref_testcase_id': ref_testcase_id,
                 'worker_testcase': task_to_do,
                 'teststep': self.TestSet.teststeps_map[0][template_to_use],
                 'components_lib': self.TestSet.teststeps_map[1],

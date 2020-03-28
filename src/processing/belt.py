@@ -25,12 +25,16 @@ class AssemblyBelt:
     def __init__(
         self,
         material_per_task: dict(
-            worker_testcase=None, teststep=None, components_lib=None
+            ref_testcase_id=None,
+            worker_testcase=None,
+            teststep=None,
+            components_lib=None,
         ),
     ):
         self._testreports = []  # reports after completing a step
         self.prev = {}  # storing the previous step
-        self.process = Assembler(
+        self.assembler = Assembler(
+            ref_id=material_per_task['ref_testcase_id'],
             testcase=material_per_task['worker_testcase'],
             teststep=material_per_task['teststep'],
             component_map=material_per_task['components_lib'],
@@ -49,8 +53,8 @@ class AssemblyBelt:
         """
 
         ### initialize variables ###
-        process = self.process
-        process_iter = iter(process)
+        assembler = self.assembler
+        process_iter = iter(assembler)
         process_cur = process_iter.ptr
         process_end = process_iter.end_index
         global_step_idx = 0  # use to trace the global step regardless of the ptr
@@ -59,14 +63,14 @@ class AssemblyBelt:
         while process_cur < process_end:
             # TODO a webstatus assertion
 
-            cache = process.new_process_initialize(
+            cache = assembler.new_process_initialize(
                 process_iter=process_iter, global_index=global_step_idx, prev=self.prev
             )
 
-            test_exe = TestExecution(process.driver, cache)
+            test_exe = TestExecution(assembler.driver, cache)
             test_exe.execute_func(execute_for='exe_teststep')
 
-            validate_exe = ValidateExecution(process.driver, cache)
+            validate_exe = ValidateExecution(assembler.driver, cache)
             if validate_exe.validate_require:
                 validate_exe.execute_func(execute_for='validate')
 
@@ -96,7 +100,7 @@ class AssemblyBelt:
                 del cache, validate_exe, test_exe
                 process_cur = process_iter.ptr
 
-        process.driver.close()
+        assembler.driver.close()
         return self.get_reports()
 
     def _ptr_logic_gate(self, cache: Cache, process_cur):
@@ -108,7 +112,9 @@ class AssemblyBelt:
             next_ptr = int(tem_cache['jumpto'])
         elif 'skipby' in tem_cache:
             next_ptr = process_cur + int(tem_cache['skipby'])
-        self.process.ptr_change(new_ptr=next_ptr) if next_ptr is not None else next_ptr
+        self.assembler.ptr_change(
+            new_ptr=next_ptr
+        ) if next_ptr is not None else next_ptr
         return None
 
     def _print_table(self, cache: Cache, print_config: dict):

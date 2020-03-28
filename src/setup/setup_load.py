@@ -87,10 +87,7 @@ class DataLoader(Loader):
 
         return teststeps_map, component_map
 
-    @property
-    def assign_testcase(self):
-        """assign testcase to workers"""
-        num_workers = self.config['service']['num_workers']
+    def _create_df(self):
         workbook = self._get_workbook(config_key='test_cases_file')
         df = pd.DataFrame()
         for section in workbook.sheet_names:
@@ -98,6 +95,19 @@ class DataLoader(Loader):
             tem['section'] = section  # add a column to define which section it is from
             df = df.append(tem)
             del tem
+
+        # locate the column for index
+        index_col = self.config['reader_settings']['test_case']['keys']['case_id']
+        df = df.set_index(index_col, verify_integrity=True)
+        return df
+
+    @property
+    def assign_testcase(self):
+        """assign testcase to workers"""
+        num_workers = self.config['service']['num_workers']
+        df = self._create_df()
+
+        # TODO: Enable a way to prompt users that some test_id is not unique, generate assertion for them to fix it.
 
         # assign tasks to workers
         assign = AssignWorkers(df, num_workers=num_workers)
