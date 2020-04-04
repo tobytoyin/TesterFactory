@@ -9,25 +9,24 @@ class ValidateExecution(Execution):
 
     def __init__(self, driver, cache):
         super().__init__(driver, cache)
-        # self.cache = cache.get_cache
-        # self.bp_cache = cache.get_bp_cache
-        self.s_cache = cache.get_cache(which_cache='tem')
+        self.tem_cache = cache.get_cache(which_cache='tem')
         self.terminate = True
         self.result = 'Fail'
 
     @property
     def validate_value(self):
-        """Retrieve the value to validate for"""
-        return self.bp_cache['validate_data']
+        "Retrieve validate_data to verify correct value"
+        return self.exe_data['validate_data']
 
     @property
     def validate_require(self):
-        return self.bp_cache['validate_method'] != 'nan'
+        "Return whether a validate step is needed"
+        return self.exe_data['validate_method'] != 'nan'
 
     @property
     def logic_args(self):
         """Retrieve inline args and inputs for validation"""
-        return self.bp_cache['validate_arg']
+        return self.exe_data['validate_arg']
 
     ### helper ###
     def is_good(self):
@@ -42,7 +41,7 @@ class ValidateExecution(Execution):
         """
         ### initiate ###
         compare_with = self.validate_value
-        cached = self.s_cache['text']
+        cached = self.tem_cache['text']
         how = self._logic_setup(default='strict')
 
         ### Load info from cache-text ###
@@ -91,12 +90,12 @@ class ValidateExecution(Execution):
         """
         ### initiate ###
         assert (
-            self.s_cache != {}
+            self.tem_cache != {}
         ), "Cannot conduct validation without `checkout` a specific elements previously"
-        element_exist = self.s_cache['element_exist']  # retrieve previous element
+        element_exist = self.tem_cache['element_exist']  # retrieve previous element
         how = self._logic_setup(default='exist')
-        validate_key = self.bp_cache['validate_key']
-        validate_value = self.bp_cache['validate_data']
+        validate_key = self.exe_data['validate_key']
+        validate_value = self.exe_data['validate_data']
         placeholder = 'EXIST'
         tp = tn = None
 

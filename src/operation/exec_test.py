@@ -21,7 +21,7 @@ class TestExecution(Execution):
     @property
     def logic_args(self):
         """Retrieve inline args and input for running"""
-        return self.bp_cache['exe_teststep_arg']
+        return self.exe_data['exe_teststep_arg']
 
     ### Preparation Functions ###
     def _locators(self):
@@ -30,8 +30,8 @@ class TestExecution(Execution):
         ------
         `(locator, path)` --
         """
-        path = self.bp_cache['exe_teststep_source']
-        locator = self.bp_cache['exe_teststep_selector'].lower()
+        path = self.exe_data['exe_teststep_source']
+        locator = self.exe_data['exe_teststep_selector'].lower()
         if locator in ['class', 'tag']:
             return f'{locator} name', path, self.driver
         elif locator == 'css':
@@ -50,7 +50,7 @@ class TestExecution(Execution):
     def _group_elements(self):
         """Use to locate GROUPED web elements by INDEX"""
         locator, path, driver = self._locators()
-        value = self.bp_cache['exe_teststep_data'].lower()
+        value = self.exe_data['exe_teststep_data'].lower()
         choice = 0  # if entry don't have choice, assume to select first element
 
         if value in ['false', 'no']:
@@ -70,9 +70,10 @@ class TestExecution(Execution):
     def _text_elements(self):
         """Locate GROUPED web elements by STRING"""
         locator, path, driver = self._locators()
-        value = self.bp_cache['exe_teststep_data']
+        value = self.exe_data['exe_teststep_data']
 
         # locate buttons
+        # driver.find_element_by_link_text
         buttons = driver.find_elements(locator, path)
 
         # element not found
@@ -122,7 +123,7 @@ class TestExecution(Execution):
     def _input_writer(self):
         """Inject `exe_teststep_data` into input fields"""
         # initiate
-        input_value = self.bp_cache['exe_teststep_data']
+        input_value = self.exe_data['exe_teststep_data']
         element = self.element_exist
         driver = self.driver
 
@@ -190,7 +191,7 @@ class TestExecution(Execution):
             # determine whether the checking is from given by users
             # or it is part of the runflow
             gate = (
-                self.bp_cache['exe_teststep_data']
+                self.exe_data['exe_teststep_data']
                 if attr['condition'] == 'Key'
                 else attr['condition']
             )
@@ -259,7 +260,7 @@ class TestExecution(Execution):
     def counter(self):
         """Counter on the looping"""
         # trigger this counter
-        counter_name = f'counter_{self.bp_cache["exe_teststep_index"]}'
+        counter_name = f'counter_{self.exe_data["exe_teststep_index"]}'
         prev = self.cache._prev
         # check if this counter_name already exist in cache
         new_counter = counter_name not in self.cache._prev
@@ -295,7 +296,7 @@ class TestExecution(Execution):
 
         try:
             locator, path, driver = self._locators()
-            value = self.bp_cache['exe_teststep_data']
+            value = self.exe_data['exe_teststep_data']
             js_template = 'document.{method}("{path}").value = "{value}";'
             js_command = ''
             self.element_exist.send_keys(value, Keys.TAB)
@@ -317,11 +318,11 @@ class TestExecution(Execution):
     def screencap(self, file_name):
         """Take a full screenshot"""
         if file_name == '':
-            file_name = self.bp_cache['exe_teststep_data']
+            file_name = self.exe_data['exe_teststep_data']
         img_where = '/'
         sleep(0.5)
-        img_name = f'{img_where}{self.tc}_{file_name}.png'
-        self.cache.log_input(tc=self.tc, output=f'IMAGE:{img_name}')
+        img_name = f'{img_where}{self.ref_id}_{file_name}.png'
+        self.cache.log_input(tc=self.ref_id, output=f'IMAGE:{img_name}')
 
     def write_input(self):
         """Input value into INPUT FIELDS"""
@@ -344,7 +345,7 @@ class TestExecution(Execution):
         """
         ### initiate ###
         self._single_element()
-        args = self.bp_cache['exe_teststep_key']
+        args = self.exe_data['exe_teststep_key']
         naming = ''
         have_name = self._logic_setup(default='nameless')
         text = ''
@@ -398,7 +399,7 @@ class TestExecution(Execution):
             pass
 
         output = f"TEXT{varname}:{text}"
-        self.cache.log_input(tc=self.tc, output=output)
+        self.cache.log_input(tc=self.ref_id, output=output)
         self.cache.cache_add(text=output)  # add to cache for validation if needed
 
     def goto(self):
@@ -409,10 +410,10 @@ class TestExecution(Execution):
 
         ### GOTO URL ###
         if 'url' in goto:
-            url = self.bp_cache['exe_teststep_data']
+            url = self.exe_data['exe_teststep_data']
             assert url[0:4] == 'http', "'url' should start with 'http' or 'https'"
             driver.get(url)
-            print(f"> {self.tc} travelling to: '{url}'")
+            print(f"> {self.ref_id} travelling to: '{url}'")
 
         ### GOTO iFRAME ###
         elif 'iframe' in goto:
@@ -438,7 +439,7 @@ class TestExecution(Execution):
 
         self._single_element()
         file_location = (
-            getcwd() + '\\resources\\input\\' + self.bp_cache['exe_teststep_data']
+            getcwd() + '\\resources\\input\\' + self.exe_data['exe_teststep_data']
         )
         element = self.element_exist
         element.send_keys(file_location)

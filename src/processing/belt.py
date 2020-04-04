@@ -91,7 +91,7 @@ class AssemblyBelt:
                 if validate_exe.validate_require and assembly_config['stop_when_fail']:
                     assert validate_exe.terminate is False
             except AssertionError:
-                print(f"> {validate_exe.tc} has been terminated")
+                print(f"> {validate_exe.ref_id} has been terminated")
                 break
             finally:
                 del cache, validate_exe, test_exe
