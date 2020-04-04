@@ -1,4 +1,5 @@
 from selenium.webdriver.support.ui import WebDriverWait
+from src.setup.setup_dir import create_output_path
 
 
 class Execution:
@@ -24,11 +25,10 @@ class Execution:
 
         # Caches
         self.cache = cache
-        # self.bp_cache = self.cache.get_bp_cache
-        self.bp_cache = self.cache.get_cache(which_cache='exe')
+        self.exe_data = self.cache.get_cache(which_cache='exe')
 
         # Values that commonly used
-        self.tc = self.bp_cache['ref_id']  # test case id
+        self.ref_id = self.exe_data['ref_id']  # test case id
         self.element_exist = None  # determine whether a web-element exist or not
 
     ##### FUNCTIONS THAT VARY BY CHILD_CLASS #####
@@ -64,13 +64,13 @@ class Execution:
         }, "Usage: execute_for in {'exe_teststep', 'validate'}"
         # retrieve whether current cache is passing testing step or validating step function
         key = f'{execute_for}_method'
-        bp_cache = self.bp_cache
+        exe_data = self.exe_data
 
         # Break and skip condition
-        empty_func_cond = str(bp_cache[key]) == 'nan'
+        empty_func_cond = str(exe_data[key]) == 'nan'
         if empty_func_cond:
             return None  # break, no func to execute
-        func = getattr(self, bp_cache[key])
+        func = getattr(self, exe_data[key])
         func()
 
         ### add element into cache ###
@@ -85,16 +85,27 @@ class Execution:
         # tc -- id for test case data
         # map_index -- id for execution logic row
         if execute_for == 'validate':
+            index = exe_data['exe_teststep_index']
+
+            # Take a screenshots 
+            file_name = f"{self.ref_id};STEP={index}"
+            img_path = create_output_path(name=file_name, ext='png', inner_dir='image_testcases')
+            print(img_path)
+            self.driver.save_screenshot(img_path)
+
             self.cache.data_load(
                 load_to='log',
                 # ref_id=('string', self.tc),
                 # ref_section=('string', bp_cache['ref_testcase_section']),
-                teststep_index=('string', bp_cache['exe_teststep_index']),
+                teststep_index=('string', index),
+                output=('string', f'png: {file_name}')
             )
 
             # add "add_" additional fields
-            for item in bp_cache.keys():
+            for item in exe_data.keys():
                 if ("add_" in item) | ("ref_" in item):
                     self.cache.data_load(
-                        load_to='log', **{item: ('string', bp_cache[item])}
+                        load_to='log', **{item: ('string', exe_data[item])}
                     )
+
+            

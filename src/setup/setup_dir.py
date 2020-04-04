@@ -21,11 +21,16 @@ class DirSetter:
             print(f">> Created folders in {path}")
         return path
 
-    def create_output_path(self, name: str = None, ext: str = None):
+    def create_output_path(self, name: str = None, ext: str = None, inner_dir: str = None):
         'function to help generating consistent file names. `name:str`: a file name to be created. `return`: a path to create this file'
         assert (name != None) & (ext != None), "cannot be empty"
-        file_name = f"{name}_{self._create_pattern(create_type='doc')}.{ext}"
-        target_path = f'{self.output_dir}/{file_name}'
+        file_name = f"{name} {self._create_pattern(create_type='doc')}.{ext}"
+
+        if inner_dir == None:
+            target_path = f'{self.output_dir}/{file_name}'
+        else: 
+            target_path = f'{self.output_dir}/{inner_dir}/{file_name}'
+
         return target_path
 
     def _create_pattern(self, create_type=None):
@@ -34,7 +39,7 @@ class DirSetter:
         if create_type == 'dir':
             return f'{cur_time} {testcase_name}'
         elif create_type == 'doc':
-            return f'{testcase_name}_{cur_time}'
+            return f' ({testcase_name}_{cur_time})'
 
 
 if __name__ == '__main__':

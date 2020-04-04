@@ -50,6 +50,7 @@ class Cache:
             ###
             'error_alert': None,
             'global_index': None,
+            'output': None,
         }
 
         ### Misc Cache ###
