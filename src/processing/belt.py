@@ -38,8 +38,9 @@ class AssemblyBelt:
         )
 
     ### Golden Retriever ###
+
     def get_reports(self):
-        'Retrieve the testing report for a single test case'
+        'Retrieve the testing report for a test case'
         return self._testreports
 
     def start(self):
