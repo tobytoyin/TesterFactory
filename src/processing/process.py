@@ -5,7 +5,7 @@ from src.helper import inline_arg_compile
 
 
 class Process:
-    def __init__(self, service_info, test_input, bp_map):
+    def __init__(self, setup, test_input, bp_map, components_map):
         """
         Core processing for fetching data. Per blueprint task
 
@@ -15,72 +15,85 @@ class Process:
         `test_input` (single Factory object): an object to keep track of data;
         `bp_map` (single Factory object): an process map mapping all testing actions for selenium to operate;
         """
-        self.service_info = service_info
+        self.driver = self.create_driver()
+        self.driver_options = setup['service']['options']
+        self.additional_col = setup['caseMap']['additionalOutputCol']
         self.test_input = test_input
         self.bp_map = bp_map
-        self.driver = self.create_driver()
-
-        # define unique identity
-        self.tc = self.test_input['test_id']
-
-    def create_driver(self):
-        """start a webdriver"""
-        options = Options()
-        for arg in self.service_info['options']:
-            options.add_argument(arg)
-        driver = webdriver.Chrome(
-            'resources/webdrivers/chromedriver.exe', options=options
-        )
-        return driver
+        self.componenets_map = components_map
+        self.test_id = self.test_input['test_id']  # define unique identity
 
     def __iter__(self):
+
         self.i = 0
         self.n = len(self.bp_map)
         return self
 
     def __next__(self):
         """
-        Move the pointer
+        Move the pointer. This also means that it moves the rows of the excel.
         Outputs:
         ------
         `caches`: A data cache for operation as well as report storage.
         """
+
+        def _selector(from_master=False):
+            if from_master:
+                key = test_step['path']
+                return self.componenets_map.loc[key]
+            else:
+                return test_step
+
         # pointer move in a step of flow_map
         i = self.i
 
         if i <= self.n:
             cache = Cache()
-            row = self.bp_map.loc[i]
+            test_step = self.bp_map.loc[i]
+            test_data = self.test_input
+
+            ### get locator from components_map ###
+            from_master_bool = test_step['selector'] == 'master'
+            source = _selector(from_master=from_master_bool)  # assign source
 
             ### handle data selection using key ###
-            # special handling, skip
-            pass_key = str(row['key']) == 'nan' or row['key'][0] == '%'
-            pass_val = (
-                str(row['validate_key']) == 'nan' or row['validate_key'][0] == '%'
+            # special handling on NaN or %xxxxx test_step
+            skip_step = str(test_step['key']) == 'nan' or test_step['key'][0] == '%'
+            skip_validation = (
+                str(test_step['validate_key']) == 'nan'
+                or test_step['validate_key'][0] == '%'
             )
 
-            value = 'nan' if pass_key else self.test_input[row['key']]
-            validate_value = 'nan' if pass_val else self.test_input[row['validate_key']]
+            # Framework treat 'nan' as skip case
+            test_value = 'nan' if skip_step else test_data[test_step['key']]
+            validate_value = (
+                'nan' if skip_validation else test_data[test_step['validate_key']]
+            )
 
             # update data into DataInterface of current pointing row
             cache.data_str_load(
-                run_tc=self.tc,
-                run_index=row['index'],
-                run_locator=row['locator'],
-                run_path=row['path'],
-                run_method=row['method'],
-                run_logic=row['logic'],
-                run_key=row['key'],
-                run_value=value,
-                validate_method=row['validate_method'],
-                validate_key=row['validate_key'],
+                run_test_id=self.test_id,
+                run_index=test_step['index'],
+                run_locator=source['locator'],
+                run_path=source['path'],
+                run_method=test_step['method'],
+                run_logic_str=test_step['logic'],
+                run_key=test_step['key'],
+                run_value=test_value,
+                validate_method=test_step['validate_method'],
+                validate_key=test_step['validate_key'],
                 validate_value=validate_value,
-                validate_logic=row['validate_logic'],
+                validate_logic=test_step['validate_logic'],
             )
 
+            ### Load additional Fields ###
+            if self.additional_col:
+                for add_col in self.additional_col:
+                    cache.data_str_load(**{f"add_{add_col}": test_data[add_col]})
+
             # compile inline-logic, add into DataInterface as dict()
-            logic_dict = inline_arg_compile(str(row['logic']))
-            validate_logic_dict = inline_arg_compile(str(row['validate_logic']))
+            logic_dict = inline_arg_compile(str(test_step['logic']))
+            validate_logic_dict = inline_arg_compile(str(test_step['validate_logic']))
             cache.data_any_load(
                 run_logic_fetch=logic_dict, validate_logic_fetch=validate_logic_dict
             )
@@ -98,6 +111,36 @@ class Process:
         self.i = int(value)
         return None
 
+    def create_driver(self):
+        """start a webdriver"""
+        options = Options()
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+        # loop options setup
+        for arg in self.driver_options:
+            options.add_argument(arg)
+        driver = webdriver.Chrome(
+            'resources/webdrivers/chromedriver.exe', options=options
+        )
+
+        # options to avoid automation blocks
+        driver.execute_cdp_cmd("Network.enable", {})
+        driver.execute_cdp_cmd(
+            "Network.setExtraHTTPHeaders", {"headers": {"User-Agent": "tobyto"}}
+        )
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": """
+            Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined
+            })
+        """
+            },
+        )
+        return driver
+
     @property
     def web_status(self):
         # JS object for the current web response
@@ -108,23 +151,5 @@ class Process:
             })();
         '''
         return self.driver.execute_script(js_command)
-
-
-# f = Factory()
-# case = 4
-# t = f.test_inputs
-# template = t['template'][case]
-# a = f.flow_maps[template]
-# driver = webdriver.Chrome('resources/webdrivers/chromedriver.exe')
-# p = Process(driver, t.loc[case], a)
-# # it = iter(p)
-# # n = next(it)
-
-# test_data = {
-#     'driver': driver,
-#     'f': f,
-#     'flow_maps': a,
-#     'test_inputs': t,
-#     'process': p
-#     # 'cache': n
-# }
+        # url = self.driver.current_url
+        # return requests.get(url).status_code

@@ -1,0 +1,54 @@
+{
+    "test_steps_file": {
+        "path": "data/teststep_inputs",
+        "file_name": "runflow.xlsx",
+        "components_lib": "v2"
+    },
+    "test_cases_file": {
+        "path": "data/testcase_inputs",
+        "file_name": "function_test.xlsx"
+    },
+
+    "export_settings": {
+        "path": "output",
+        "add_columns": ["remarks"],
+        "ref_columns": ["group"]
+    },
+    "service": {
+        "num_workers": 2,
+        "options": ["--start-maximized", "--log-level=3"]
+    },
+    "reader_settings": {
+        "test_steps": {
+            "keys": {
+                "step_index": "index",
+                "selector": "locator",
+                "source": "path",
+                "test_method": "method",
+                "test_logic": "logic",
+                "data_key": "key",
+                "validate_method": "validate_method",
+                "validate_data_key": "validate_key",
+                "validate_logic": "validate_logic"
+            },
+            "symbols": {
+                "skip_sym": "%",
+                "lookup_sym": "master"
+            }
+        },
+        "test_case": {
+            "keys": {
+                "case_id": "test_id",
+                "case_template": "template"
+            }
+        }
+    },
+    "assembly_settings": {
+        "print_table": {
+            "print_log": true,
+            "print_tem": true
+        },
+        "stop_when_fail": true,
+        "debug_mode": false
+    }
+}

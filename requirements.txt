@@ -1,5 +1,6 @@
 pandas
-xlrd
 selenium
 pillow
 bs4
+Requests
+xlrd

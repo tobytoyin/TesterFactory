@@ -1,0 +1,2 @@
+,tc,map_index,result,g,error_msg,add_remarks,output,validate_method,worker_id,expect,worker_task_id,actual
+0,sme_ax,END,Pass,END,,travel ,,,worker_1,Redirect (['contain']) to 'plan-select',1,Redirect (['contain']) to 'https://axahk:AXA+Corp-1@hk-web-uat.paas.axa-asia.com/en/travel-insurance-protection/plan-selection'

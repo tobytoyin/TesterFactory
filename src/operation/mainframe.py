@@ -1,5 +1,6 @@
-from src.helper import print_table
-from src.operation.execution import TestExecution, ValidateExecution
+from src.helper import print_table, Timer
+from src.operation.exec_valid import ValidateExecution
+from src.operation.exec_test import TestExecution
 from src.processing.process import Process
 from datetime import datetime
 from multiprocessing import Lock
@@ -15,16 +16,19 @@ class MainFrame:
     `process_info` (A dictionary in a format)
     """
 
-    def __init__(self, process_info, printout, printout_cache):
+    def __init__(self, process_info, printout, printout_cache, stop_when_fail):
+        self.args = {
+            'printout': printout,
+            'printout_cache': printout_cache,
+            'stop_when_fail': stop_when_fail,
+        }
         self.reports = []
         self.prev = {}
         self.process = Process(
-            process_info['service_info'],
-            process_info['test_input'],
-            process_info['bp_map'],
+            setup=process_info['setup'],
+            test_input=process_info['test_input'],
+            bp_map=process_info['bp_map'],
         )
-        self.printout = printout
-        self.printout_cache = printout_cache
 
     @property
     def get_reports(self):
@@ -57,8 +61,11 @@ class MainFrame:
             # print(data_interface.get_blueprint_cache)
 
             # Block for TestExecution
+            timer = Timer()
+            timer.begin()
             test_exe = TestExecution(process.driver, cache)
             test_exe.execute_func(execute_for='run')
+            timer.end()
 
             # Debugging msg
             # print("Test cache passing --->")
@@ -66,13 +73,14 @@ class MainFrame:
 
             # Block for ValidateExecution
             valid_exe = ValidateExecution(process.driver, cache)
-            valid_exe.execute_func(execute_for='validate')
+            if valid_exe.validate_require:
+                valid_exe.execute_func(execute_for='validate')
 
             # Block for manipulating iterator pointer
             self.ptr_logic_gate(cache, process_cur)
 
             # Debug print
-            if self.printout:
+            if self.args['printout']:
                 print_lock.acquire()
                 header_b = ('Blueprint fields', 'Values')
                 print_table(
@@ -82,7 +90,8 @@ class MainFrame:
                     style=('=', '-'),
                 )
                 print_lock.release()
-            if self.printout_cache:
+
+            if self.args['printout_cache']:
                 print_lock.acquire()
                 header_c = ('Cached fields', 'Values')
                 print_table(
@@ -99,8 +108,15 @@ class MainFrame:
             # store history
             g += 1
             self.prev.update(cache.get_cache)
-            del cache, valid_exe, test_exe
-            process_cur = process_iter.i  # retreive current position
+            try:
+                if valid_exe.validate_require and self.args['stop_when_fail']:
+                    assert valid_exe.terminate is False
+            except AssertionError:  # Fail case will stop immediately
+                print(f"> {valid_exe.tc} has been terminated")
+                break
+            finally:
+                del cache, valid_exe, test_exe
+                process_cur = process_iter.i  # retreive current position
 
         ### process terminated ###
         process.driver.close()

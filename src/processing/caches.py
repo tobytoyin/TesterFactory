@@ -69,11 +69,8 @@ class Cache:
         Only works when key exist in `Cache._bp_cache`
         """
         for key, value in kwargs.items():
-            assert (
-                key in self._bp_cache.keys()
-            ), "Key not in blueprint, use data_add_key() to add new key"
             self._bp_cache[key] = str(value)
-        return self.get_bp_cache
+        return self
 
     def data_any_load(self, **kwargs):
         """
@@ -84,14 +81,14 @@ class Cache:
                 key in self._bp_cache.keys()
             ), "Key not in blueprint, use data_add_key() to add new key"
             self._bp_cache[key] = value
-        return self.get_bp_cache
+        return self
 
     def data_add_key(self, **args):
         """Add keys to `Cache`"""
         for new_key in args.items():
             assert new_key not in self._bp_cache.keys(), "Repeated Key"
             self._bp_cache[new_key] = ''
-        return self.get_bp_cache
+        return self
 
     def check_proceed(self, test_case=''):
         "A test case can proceed to next step"
@@ -106,10 +103,14 @@ class Cache:
     def log_input(self, **kwargs):
         """Function for adding log for each testing process"""
         for key, value in kwargs.items():
+            # try:
             if key == 'tc':
-                self._log_cache[key] = value
+                self._log_cache[key] = str(value)
             else:
-                self._log_cache[key] += f"{value}"
+                try:
+                    self._log_cache[key] += str(value)
+                except KeyError:
+                    self._log_cache[key] = str(value)
         return self.get_log_cache
 
     def cache_add(self, **kwargs):

@@ -8,7 +8,7 @@ from src.helper import print_table
 class Application:
     """Application is the Framework"""
 
-    def __init__(self, app_path="C:/Users/tobyt/TestFactory", **kwargs):
+    def __init__(self, app_path="C:/Users/tobyt/Projects/TestFactory", **kwargs):
         self.app_path = app_path
         self.factory = Factory(path=f'{app_path}/controller/controller.json')
         self.reports = Manager().dict()
@@ -33,14 +33,19 @@ class Application:
             printout_cache = bool(self.printout_cache)
         except AttributeError:
             printout_cache = False
+        try:
+            stop_when_fail = bool(self.stop_when_fail)
+        except AttributeError:
+            stop_when_fail = True
 
         task_id = 1
         for _, job_to_do in worker_tasks_all.iterrows():
             # process info have i-th row test case
             template_to_fetch = job_to_do[template_col]
+
             process_info = {
-                'service_info': self.data['service'],
-                'test_input': job_to_do,
+                'setup': self.data,  # is the json setup
+                'test_input': job_to_do,  # is the test load
                 'bp_map': self.factory.bp_maps[template_to_fetch],
             }
 
@@ -49,6 +54,7 @@ class Application:
                 process_info=process_info,
                 printout=printout,
                 printout_cache=printout_cache,
+                stop_when_fail=stop_when_fail,
             )
             result[task_id] = mainframe.start()
             del mainframe
@@ -98,18 +104,23 @@ class Application:
 
                 # input to result
                 out = {
-                    'worker_id': tem['worker_id'].unique()[0],
-                    'worker_task_id': tem['worker_task_id'].unique()[0],
                     'tc': tc_to_judge,
                     'map_index': 'END',
                     'result': final_result,
                     'g': 'END',
                 }
+                # add other fields
+                diff = set(tem).difference(set(out))
+                for d in diff:
+                    out[d] = tem[d].unique()[0]
+
                 print_table(out, title=f"Final result of {tc_to_judge}")
+
                 out_li.append(out)
                 del out, tem, final_result
 
-            summary = df.append(out_li, ignore_index=True)
+            # summary = df.append(out_li, ignore_index=True)
+            summary = pd.DataFrame(out_li)
             return summary
 
         validation_series_li = []  # for create dataframe
@@ -126,18 +137,24 @@ class Application:
                     del tem
 
         ### Final reporting format ###
-        path = self.data['output']['path']
-        filename = self.data['output']['fileName']
-        summaryname = self.data['output']['summaryName']
+        try:
+            path = self.data['output']['path']
+            filename = self.data['output']['fileName']
+            summaryname = self.data['output']['summaryName']
+            col_names = list(validation_series_li[0].keys())
 
-        df = pd.DataFrame(validation_series_li)
-        df.to_csv(f'{self.app_path}/{path}/{filename}')
-        summary = _report_judgement()
-        summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
-        return None
+            df = pd.DataFrame(validation_series_li, columns=col_names)
+            df.to_csv(f'{self.app_path}/{path}/{filename}')
+            summary = _report_judgement()
+            summary.to_csv(f'{self.app_path}/{path}/{summaryname}')
+            return None
+        # empty list
+        # TODO how to handle input with not validation
+        except KeyError:
+            return None
 
 
 if __name__ == '__main__':
-    a = Application()
+    a = Application(printout=False)
     a.initialize_tasks()
     a.create_csv()
